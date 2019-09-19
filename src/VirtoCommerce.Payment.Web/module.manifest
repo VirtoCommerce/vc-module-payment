@@ -17,6 +17,9 @@
     <owners>
         <owner>Virto Commerce</owner>
     </owners>
+	<groups>
+        <group>commerce</group>
+    </groups>
     <projectUrl>https://virtocommerce.com/apps/extensions/virto-payment-module</projectUrl>
     <iconUrl>Modules/$(VirtoCommerce.Payment)/Content/logo.png</iconUrl>
     <releaseNotes></releaseNotes>
