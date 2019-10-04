@@ -61,6 +61,5 @@ namespace VirtoCommerce.PaymentModule.Data
         {
             return new ValidatePostProcessRequestResult { IsSuccess = false };
         }
-
     }
 }

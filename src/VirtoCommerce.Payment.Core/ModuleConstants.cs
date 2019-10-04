@@ -30,6 +30,7 @@ namespace VirtoCommerce.PaymentModule.Core
                     }
                 }
             }
+
             public static IEnumerable<SettingDescriptor> AllSettings => General.AllSettings.Concat(DefaultManualPaymentMethod.AllSettings);
         }
     }

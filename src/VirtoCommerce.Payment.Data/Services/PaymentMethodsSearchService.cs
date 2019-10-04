@@ -24,7 +24,6 @@ namespace VirtoCommerce.PaymentModule.Data.Services
         private readonly IPaymentMethodsService _paymentMethodsService;
         private readonly ISettingsManager _settingsManager;
 
-
         public PaymentMethodsSearchService(
             Func<IPaymentRepository> repositoryFactory,
             IPlatformMemoryCache memCache,
@@ -53,8 +52,6 @@ namespace VirtoCommerce.PaymentModule.Data.Services
                 using (var repository = _repositoryFactory())
                 {
                     repository.DisableChangesTracking();
-
-
                     var query = BuildQuery(repository, criteria);
 
                     result.TotalCount = await query.CountAsync();

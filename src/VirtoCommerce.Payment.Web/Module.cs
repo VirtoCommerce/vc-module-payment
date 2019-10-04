@@ -51,7 +51,7 @@ namespace VirtoCommerce.PaymentModule.Web
 
             var paymentMethodsRegistrar = appBuilder.ApplicationServices.GetRequiredService<IPaymentMethodsRegistrar>();
             paymentMethodsRegistrar.RegisterPaymentMethod<DefaultManualPaymentMethod>();
-            settingsRegistrar.RegisterSettingsForType(Core.ModuleConstants.Settings.DefaultManualPaymentMethod.AllSettings, typeof(DefaultManualPaymentMethod).Name);
+            settingsRegistrar.RegisterSettingsForType(ModuleConstants.Settings.DefaultManualPaymentMethod.AllSettings, typeof(DefaultManualPaymentMethod).Name);
 
             var mvcJsonOptions = appBuilder.ApplicationServices.GetService<IOptions<MvcJsonOptions>>();
             mvcJsonOptions.Value.SerializerSettings.Converters.Add(new PolymorphicJsonConverter(paymentMethodsRegistrar));
