@@ -1,16 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netcoreapp3.0</TargetFramework>
+        <TargetFramework>netcoreapp3.1</TargetFramework>
         <IsPackable>True</IsPackable>
         <noWarn>1591</noWarn>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="GitVersionTask" Version="5.0.1">
-          <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.0-preview2.19525.5" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="3.1.0-preview2.19525.5" />
         <PackageReference Include="VirtoCommerce.Platform.Data" Version="3.0.0-v3-feature-vp-7-0001" />
