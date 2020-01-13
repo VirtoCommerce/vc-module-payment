@@ -18,7 +18,7 @@ namespace VirtoCommerce.PaymentModule.Data.Repositories
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<StorePaymentMethodEntity>().ToTable("StorePaymentMethod").HasKey(x => x.Id);
-            modelBuilder.Entity<StorePaymentMethodEntity>().Property(x => x.Id).HasMaxLength(128);
+            modelBuilder.Entity<StorePaymentMethodEntity>().Property(x => x.Id).HasMaxLength(128).ValueGeneratedOnAdd();
             modelBuilder.Entity<StorePaymentMethodEntity>().Property(x => x.StoreId).HasMaxLength(128);
             modelBuilder.Entity<StorePaymentMethodEntity>().Property(x => x.TypeName).HasMaxLength(128);
 
