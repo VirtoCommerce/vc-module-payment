@@ -9,7 +9,7 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.0" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="3.1.0" />
-        <PackageReference Include="VirtoCommerce.Platform.Data" Version="3.0.0-rc2-0134" />
+        <PackageReference Include="VirtoCommerce.Platform.Data" Version="3.0.0-rc2-0138" />
     </ItemGroup>
 
     <ItemGroup>
