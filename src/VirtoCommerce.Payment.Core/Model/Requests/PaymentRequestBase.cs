@@ -12,6 +12,7 @@ namespace VirtoCommerce.PaymentModule.Model.Requests
         public IEntity Order { get; set; }
 
         public string StoreId { get; set; }
+        public IEntity Store { get; set; }
 
         public string OuterId { get; set; }
 
