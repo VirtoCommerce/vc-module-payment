@@ -11,9 +11,10 @@ namespace VirtoCommerce.PaymentModule.Core.Model
 {
     public abstract class PaymentMethod : Entity, IHasSettings, IHasTaxDetalization, ITaxable, ICloneable
     {
-        public PaymentMethod(string code)
+        protected PaymentMethod(string code)
         {
             Code = code;
+            Settings = Array.Empty<ObjectSettingEntry>();
         }
 
         /// <summary>
