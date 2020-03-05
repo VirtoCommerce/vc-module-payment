@@ -79,6 +79,11 @@ namespace VirtoCommerce.PaymentModule.Data.Services
                     {
                         transientMethodsQuery = transientMethodsQuery.Where(x => x.Code.Contains(criteria.Keyword));
                     }
+
+                    if (criteria.IsActive.HasValue)
+                    {
+                        transientMethodsQuery = transientMethodsQuery.Where(x => x.IsActive == criteria.IsActive.Value);
+                    }
                     var allPersistentTypes = result.Results.Select(x => x.GetType()).Distinct();
                     transientMethodsQuery = transientMethodsQuery.Where(x => !allPersistentTypes.Contains(x.GetType()));
 
