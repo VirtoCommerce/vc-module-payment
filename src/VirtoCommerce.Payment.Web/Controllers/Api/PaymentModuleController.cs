@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VirtoCommerce.PaymentModule.Core.Model;
 using VirtoCommerce.PaymentModule.Core.Model.Search;
@@ -7,6 +8,7 @@ using VirtoCommerce.PaymentModule.Core.Services;
 namespace VirtoCommerce.PaymentModule.Web.Controllers.Api
 {
     [Route("api/payment")]
+    [Authorize]
     public class PaymentModuleController : Controller
     {
         private readonly IPaymentMethodsSearchService _paymentMethodsSearchService;
