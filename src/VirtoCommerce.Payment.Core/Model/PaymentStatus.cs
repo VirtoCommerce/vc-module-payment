@@ -40,6 +40,14 @@ namespace VirtoCommerce.PaymentModule.Core.Model
         /// <summary>
         /// Cancelled
         /// </summary>
-        Cancelled
+        Cancelled,
+        /// <summary>
+        /// Declined
+        /// </summary>
+        Declined,
+        /// <summary>
+        /// Error
+        /// </summary>
+        Error
     }
 }
