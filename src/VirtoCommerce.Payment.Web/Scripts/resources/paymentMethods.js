@@ -4,5 +4,6 @@ angular.module('virtoCommerce.paymentModule')
         search: { method: 'POST', url: 'api/payment/search' },
         get: { url: 'api/payment/:id' },
         update: { method: 'PUT' },
+        bulkUpdate: {method: 'PUT', url: 'api/payment/bulk', isArray: true}
     });
 }]);
