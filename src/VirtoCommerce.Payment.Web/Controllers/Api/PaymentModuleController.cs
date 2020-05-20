@@ -1,9 +1,11 @@
+using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VirtoCommerce.PaymentModule.Core.Model;
 using VirtoCommerce.PaymentModule.Core.Model.Search;
 using VirtoCommerce.PaymentModule.Core.Services;
+using VirtoCommerce.Platform.Core.Common;
 
 namespace VirtoCommerce.PaymentModule.Web.Controllers.Api
 {
@@ -43,8 +45,23 @@ namespace VirtoCommerce.PaymentModule.Web.Controllers.Api
         [Route("")]
         public async Task<ActionResult<PaymentMethod>> UpdatePaymentMethod([FromBody]PaymentMethod paymentMethod)
         {
-            await _paymentMethodsService.SaveChangesAsync(new[] { paymentMethod });
+            await _paymentMethodsService.SaveChangesAsync(new [] { paymentMethod });
+
             return Ok(paymentMethod);
+        }
+
+        [HttpPut]
+        [Route("bulk")]
+        public async Task<ActionResult<PaymentMethod[]>> BulkUpdatePaymentMethod([FromBody] PaymentMethod[] paymentMethods)
+        {
+            if (paymentMethods.IsNullOrEmpty())
+            {
+                throw new ArgumentNullException(nameof(paymentMethods));
+            }
+
+            await _paymentMethodsService.SaveChangesAsync(paymentMethods);
+
+            return Ok(paymentMethods);
         }
     }
 }
