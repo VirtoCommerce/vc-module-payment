@@ -5,26 +5,34 @@ angular.module('virtoCommerce.paymentModule').controller('virtoCommerce.paymentM
         blade.isLoading = false;
         blade.headIcon = 'fa-archive';
 
-        $scope.sortableOptions = {
-            stop: function (e, ui) {
-                for (var i = 0; i < $scope.blade.currentEntities.length; i++) {
-                    $scope.blade.currentEntities[i].priority = i + 1;
-                }
-            },
-            axis: 'y',
-            cursor: "move"
-        };
-
-        blade.toolbarCommands = [
-            {
-                name: "platform.commands.refresh", icon: 'fa fa-refresh',
-                executeMethod: blade.refresh,
-                canExecuteMethod: function () { return true; }
-            }
-        ];
-
         blade.refresh();
     };
+
+    $scope.sortableOptions = {
+        stop: function (e, ui) {
+            for (var i = 0; i < $scope.blade.currentEntities.length; i++) {
+                $scope.blade.currentEntities[i].priority = i + 1;
+            }
+
+            blade.isLoading = true;
+
+            paymentMethods.bulkUpdate($scope.blade.currentEntities, function() {
+                blade.isLoading = false;
+            }, function(error) {
+                bladeNavigationService.setError('Error ' + error.status, blade);
+            });
+        },
+        axis: 'y',
+        cursor: "move"
+    };
+
+    blade.toolbarCommands = [
+        {
+            name: "platform.commands.refresh", icon: 'fa fa-refresh',
+            executeMethod: blade.refresh,
+            canExecuteMethod: function () { return true; }
+        }
+    ];
 
     blade.refresh = function () {
         blade.isLoading = true;
