@@ -26,6 +26,19 @@ angular.module('virtoCommerce.paymentModule').controller('virtoCommerce.paymentM
         cursor: "move"
     };
 
+    blade.refresh = function () {
+        blade.isLoading = true;
+        paymentMethods.search({
+            storeId: blade.storeId
+        }, function (data) {
+            blade.isLoading = false;
+            blade.currentEntities = _.sortBy(data.results, function(paymentMethod) { return paymentMethod.priority; });
+            blade.selectedPaymentMethods = _.findWhere(blade.currentEntities, { isActive: true });
+        }, function (error) {
+            bladeNavigationService.setError('Error ' + error.status, blade);
+        });
+    }
+
     blade.toolbarCommands = [
         {
             name: "platform.commands.refresh", icon: 'fa fa-refresh',
@@ -33,19 +46,6 @@ angular.module('virtoCommerce.paymentModule').controller('virtoCommerce.paymentM
             canExecuteMethod: function () { return true; }
         }
     ];
-
-    blade.refresh = function () {
-        blade.isLoading = true;
-        paymentMethods.search({
-            storeId: blade.storeId
-        }, function (data) {
-            blade.isLoading = false;
-            blade.currentEntities = data.results;
-            blade.selectedPaymentMethods = _.findWhere(blade.currentEntities, { isActive: true });
-        }, function (error) {
-            bladeNavigationService.setError('Error ' + error.status, blade);
-        });
-    }
 
     $scope.selectNode = function (node) {
         $scope.selectedNodeId = node.typeName;
