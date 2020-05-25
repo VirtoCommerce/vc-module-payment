@@ -88,7 +88,7 @@ namespace VirtoCommerce.PaymentModule.Data.Services
                     .Select(x => x.Id)
                     .ToArray());
 
-                foreach (var paymentMethod in paymentMethods)
+                foreach (var paymentMethod in paymentMethods.Where(x=>!string.IsNullOrEmpty(x.StoreId)))
                 {
                     var originalEntity = dataExistEntities.FirstOrDefault(x => x.Id == paymentMethod.Id);
                     var modifiedEntity = AbstractTypeFactory<StorePaymentMethodEntity>.TryCreateInstance().FromModel(paymentMethod, pkMap);
