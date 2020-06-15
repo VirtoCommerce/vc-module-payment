@@ -8,7 +8,8 @@ The Payment module allows the following options:
 1. Receive the list of payment methods on UI in VC admin;
 1. Edit payment method settings;
 1. Connect the payment methods to a Store.
-1. The selected payment methods will be available for selection on the Storefront.
+1. The selected payment methods will be available for selection on the Storefront;
+1. API to work with payment method list.
 
 ## Scenarios
 
@@ -35,21 +36,7 @@ The Payment module allows the following options:
 ### Edit Settings
 
 1. Select the 'Settings' widget on 'Edit payment method' blade;
-1. The following settings can be edited: 
-
-     1. Mode- you can select the option you need from the drop down list;
-     1. Confirmation URL
-     1. Thank you page URL
-     1. Payment action type:
-
-         1. Authorization/Capture
-         1. Sale
+1. The 'Payment method logo url' can be edited;
 1. Save the changes if you have edited the payment method settings.
 
-![Settings](src/docs/media/screen-payment-settings.png)
-
-## Documentation 
-
-[Transaction types](https://support.authorize.net/s/article/What-Are-the-Transaction-Types-That-Can-Be-Submitted)
-
-[Payment transactions](https://developer.authorize.net/api/reference/features/payment_transactions.html)
+![Settings](src/docs/media/screen-payment-method-settings.png)
