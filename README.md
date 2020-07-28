@@ -12,7 +12,7 @@ The Payment module allows the following options:
 
 ## Documentation
 
-1. [Payment Module Document](/docs/index.md)
+1. [Payment Module Document](src/docs/index.md)
 
 1. [View on Github](https://github.com/VirtoCommerce/vc-module-payment)
 
