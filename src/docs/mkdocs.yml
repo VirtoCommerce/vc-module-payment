@@ -38,8 +38,8 @@ site_author: Virto Commerce
 site_url: https://virtocommerce.com/
 
 # Repository
-repo_name: VirtoCommerce/vc-platform
-repo_url: https://github.com/VirtoCommerce/vc-platform
+repo_name: VirtoCommerce/vc-module-payment
+repo_url: https://github.com/VirtoCommerce/vc-module-payment
 
 # Copyright
 copyright: Copyright &copy; 2020. All rights reserved.
