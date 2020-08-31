@@ -1,9 +1,9 @@
-
 # Overview
 
 The Payment Module provides the ability to extend payment provider list with custom providers and also provides an interface and API for managing these payment providers.
 
 ## Key Features
+The Payment module allows the following options:
 
 1. Register payment methods using the code;
 1. Receive the list of payment methods on UI in VC admin;
