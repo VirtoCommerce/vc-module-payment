@@ -1,7 +1,8 @@
-# vc-module-payment
+# Overview
 
-## Overview
+The Payment Module provides the ability to extend payment provider list with custom providers and also provides an interface and API for managing these payment providers.
 
+## Key Features
 The Payment module allows the following options:
 
 1. Register payment methods using the code;
@@ -11,32 +12,25 @@ The Payment module allows the following options:
 1. The selected payment methods will be available for selection on the Storefront;
 1. API to work with payment method list.
 
-## Scenarios
+## Documentation
 
-### View Payment methods
+1. [Payment Module Document](src/docs/index.md)
 
-1. Go to More->Stores-> select a Store;
-1. In the opened Store details blade select the 'Payment methods' widget;
-1. The registered payment methods will be displayed on 'Payment methods' blade;
+1. [View on Github](https://github.com/VirtoCommerce/vc-module-payment)
 
-![Payment methods](src/docs/media/screen-payment-methods.png)
+## References
 
-### Edit Payment Method
+1. Deploy: https://virtocommerce.com/docs/latest/developer-guide/deploy-module-from-source-code/
+1. Installation: https://www.virtocommerce.com/docs/latest/user-guide/modules/
+1. Home: https://virtocommerce.com
+1. Community: https://www.virtocommerce.org
+1. [Download Latest Release](https://github.com/VirtoCommerce/vc-module-payment/releases)
 
-1. Select a Payment method from the list on 'Payment methods' blade
-1. On 'Edit Payment method' blade you can edit the following parameters:
+## License
+Copyright (c) Virto Solutions LTD. All rights reserved.
 
-     1. Activate or de-activate the Payment method using the 'Is Active' button;
-     1. Make partial payments available for clients on the Storefront by switching on the 'Is partial payments available' button;
-1. Once the editing is finished, save the changes made;
-1. All changes made in VC admin will be displayed on the Storefront.
+Licensed under the Virto Commerce Open Software License (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
 
-![Edit Payment method](src/docs/media/screen-edit-payment-method.png)
+http://virtocommerce.com/opensourcelicense
 
-### Edit Settings
-
-1. Select the 'Settings' widget on 'Edit payment method' blade;
-1. The 'Payment method logo url' can be edited;
-1. Save the changes if you have edited the payment method settings.
-
-![Settings](src/docs/media/screen-payment-method-settings.png)
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
