@@ -43,6 +43,13 @@ namespace VirtoCommerce.PaymentModule.Data.Services
                 }
             }
         }
+
+        public Task<PaymentMethod[]> GetRegisteredPaymentMethods() =>
+            Task.FromResult(
+                AbstractTypeFactory<PaymentMethod>.AllTypeInfos
+                .Select(x => AbstractTypeFactory<PaymentMethod>.TryCreateInstance(x.Type.Name))
+                .ToArray());
+
         #endregion
 
         public async Task<PaymentMethod[]> GetByIdsAsync(string[] ids, string responseGroup)
