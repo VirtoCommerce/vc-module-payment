@@ -32,6 +32,8 @@ namespace VirtoCommerce.PaymentModule.Core.Model
         public bool IsActive { get; set; }
         public int Priority { get; set; }
 
+        [Obsolete("This field is not used and will not be supported")]
+
         public bool IsAvailableForPartial { get; set; }
 
         public string Currency { get; set; }
