@@ -32,6 +32,17 @@
                             </div>
                         </div>
                     </div>
+                    <div class="column">
+                        <div class="form-group __info list">
+                            <label class="form-label">{{ 'payment.blades.payment-method-detail.labels.is-partial-payments-available' | translate }}</label>
+                            <div class="form-input">
+                                <label class="form-label __switch">
+                                    <input type="checkbox" ng-model="blade.currentEntity.isAvailableForPartial" />
+                                    <span class="switch"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </form>
 

@@ -5,6 +5,7 @@
                 "subtitle": "Edit payment method",
                 "labels": {
                     "is-active": "Is active",
+                    "is-partial-payments-available": "Is partial payments available",
                     "name": "Name",
                     "code": "Code",
                     "description": "Description",
