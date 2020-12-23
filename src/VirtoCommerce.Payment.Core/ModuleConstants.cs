@@ -15,9 +15,9 @@ namespace VirtoCommerce.PaymentModule.Core
 
             public static class DefaultManualPaymentMethod
             {
-                public static SettingDescriptor Logo = new SettingDescriptor
+                public static readonly SettingDescriptor ExampleSetting = new SettingDescriptor
                 {
-                    Name = "VirtoCommerce.Payment.DefaultManualPaymentMethod.Logo",
+                    Name = "VirtoCommerce.Payment.DefaultManualPaymentMethod.ExampleSetting",
                     GroupName = "Payment|DefaultManualPaymentMethod",
                     ValueType = SettingValueType.ShortText
                 };
@@ -26,7 +26,7 @@ namespace VirtoCommerce.PaymentModule.Core
                 {
                     get
                     {
-                        yield return Logo;
+                        yield return ExampleSetting;
                     }
                 }
             }
