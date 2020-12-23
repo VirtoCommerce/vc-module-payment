@@ -15,7 +15,7 @@ namespace VirtoCommerce.PaymentModule.Core
 
             public static class DefaultManualPaymentMethod
             {
-                public static SettingDescriptor ExampleSetting = new SettingDescriptor
+                public static readonly SettingDescriptor ExampleSetting = new SettingDescriptor
                 {
                     Name = "VirtoCommerce.Payment.DefaultManualPaymentMethod.ExampleSetting",
                     GroupName = "Payment|DefaultManualPaymentMethod",
