@@ -58,7 +58,7 @@ angular.module('virtoCommerce.paymentModule').controller('virtoCommerce.paymentM
         callback(setting.allowedValues);
     };
 
-    blade.headIcon = 'fa-archive';
+    blade.headIcon = 'fa fa-archive';
 
     blade.toolbarCommands = [
         {
