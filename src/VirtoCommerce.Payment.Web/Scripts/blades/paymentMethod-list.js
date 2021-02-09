@@ -3,7 +3,7 @@ angular.module('virtoCommerce.paymentModule').controller('virtoCommerce.paymentM
 
     function initializeBlade() {
         blade.isLoading = false;
-        blade.headIcon = 'fa-archive';
+        blade.headIcon = 'fa fa-archive';
 
         $scope.sortableOptions = {
             stop: function (e, ui) {
