@@ -8,22 +8,24 @@ using VirtoCommerce.PaymentModule.Core.Model.Search;
 using VirtoCommerce.PaymentModule.Core.Services;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.ExportImport;
+using VirtoCommerce.Platform.Core.GenericCrud;
 using VirtoCommerce.Platform.Data.ExportImport;
 
 namespace VirtoCommerce.PaymentModule.Data.ExportImport
 {
     public sealed class PaymentExportImport
     {
-        private readonly IPaymentMethodsService _paymentMethodsService;
         private readonly IPaymentMethodsSearchService _paymentMethodsSearchService;
+        private readonly ICrudService<PaymentMethod> _paymentMethodsService;
         private readonly JsonSerializer _jsonSerializer;
         private readonly int _batchSize = 50;
 
         public PaymentExportImport(IPaymentMethodsService paymentMethodsService, IPaymentMethodsSearchService paymentMethodsSearchService, JsonSerializer jsonSerializer)
         {
-            _paymentMethodsService = paymentMethodsService;
-            _jsonSerializer = jsonSerializer;
             _paymentMethodsSearchService = paymentMethodsSearchService;
+            _paymentMethodsService = (ICrudService<PaymentMethod>)paymentMethodsService;
+            _jsonSerializer = jsonSerializer;
+            
         }
 
         public async Task DoExportAsync(Stream outStream, Action<ExportImportProgressInfo> progressCallback, ICancellationToken cancellationToken)
@@ -38,7 +40,7 @@ namespace VirtoCommerce.PaymentModule.Data.ExportImport
             {
                 await writer.WriteStartObjectAsync();
 
-                progressInfo.Description = "Payment mthods are started to export";
+                progressInfo.Description = "Payment methods are started to export";
                 progressCallback(progressInfo);
 
                 await writer.WritePropertyNameAsync("PaymentMethods");

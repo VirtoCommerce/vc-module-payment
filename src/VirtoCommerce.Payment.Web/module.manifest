@@ -3,7 +3,7 @@
   <id>VirtoCommerce.Payment</id>
   <version>3.8.0</version>
   <version-tag />
-  <platformVersion>3.51.0</platformVersion>
+  <platformVersion>3.62.0</platformVersion>
   <title>Payment module</title>
   <description>Add payment methods management</description>
   <authors>
