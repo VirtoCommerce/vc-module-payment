@@ -14,15 +14,13 @@ namespace VirtoCommerce.PaymentModule.Web.Controllers.Api
     {
 
         private readonly ISearchService<PaymentMethodsSearchCriteria, PaymentMethodsSearchResult, PaymentMethod> _paymentMethodsSearchService;
-        private readonly IPaymentMethodsService _paymentMethodsService;
-        private readonly IPaymentMethodsSearchService _paymentMethodsSearchServiceExtended;
+        private readonly IPaymentMethodsRegistrar _paymentMethodsRegistrar;
         private readonly ICrudService<PaymentMethod> _paymentMethodCrudService;
 
         public PaymentModuleController(IPaymentMethodsSearchService paymentMethodsSearchService, IPaymentMethodsService paymentMethodsService)
         {
             _paymentMethodsSearchService = (ISearchService<PaymentMethodsSearchCriteria, PaymentMethodsSearchResult, PaymentMethod>)paymentMethodsSearchService;
-            _paymentMethodsSearchServiceExtended = paymentMethodsSearchService;
-            _paymentMethodsService = paymentMethodsService;
+            _paymentMethodsRegistrar = (IPaymentMethodsRegistrar)paymentMethodsService;
             _paymentMethodCrudService = (ICrudService<PaymentMethod>)paymentMethodsService;
         }
 
@@ -30,7 +28,7 @@ namespace VirtoCommerce.PaymentModule.Web.Controllers.Api
         [Route("")]
         public async Task<ActionResult<PaymentMethod>> GetRegisteredPaymentMethods()
         {
-            var result = await _paymentMethodsService.GetRegisteredPaymentMethods();
+            var result = await _paymentMethodsRegistrar.GetRegisteredPaymentMethods();
             return Ok(result);
         }
 
@@ -38,7 +36,7 @@ namespace VirtoCommerce.PaymentModule.Web.Controllers.Api
         [Route("search")]
         public async Task<ActionResult<PaymentMethodsSearchResult>> SearchPaymentMethods([FromBody] PaymentMethodsSearchCriteria criteria)
         {
-            var result = await _paymentMethodsSearchServiceExtended.SearchPaymentMethodsAsync(criteria);
+            var result = await _paymentMethodsSearchService.SearchAsync(criteria);
             return Ok(result);
         }
 

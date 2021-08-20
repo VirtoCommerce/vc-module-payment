@@ -36,6 +36,7 @@ namespace VirtoCommerce.PaymentModule.Web
             serviceCollection.AddTransient<Func<IPaymentRepository>>(provider => () => provider.CreateScope().ServiceProvider.GetService<IPaymentRepository>());
 
             serviceCollection.AddTransient<IPaymentMethodsService, PaymentMethodsService>();
+            serviceCollection.AddTransient<IPaymentMethodsRegistrar, PaymentMethodsService>();
             serviceCollection.AddTransient<IPaymentMethodsSearchService, PaymentMethodsSearchService>();
             serviceCollection.AddTransient<PaymentExportImport>();
         }
@@ -47,8 +48,8 @@ namespace VirtoCommerce.PaymentModule.Web
             var settingsRegistrar = appBuilder.ApplicationServices.GetRequiredService<ISettingsRegistrar>();
             settingsRegistrar.RegisterSettings(ModuleConstants.Settings.AllSettings, ModuleInfo.Id);
 
-            var paymentMethodService = appBuilder.ApplicationServices.GetRequiredService<IPaymentMethodsService>();
-            paymentMethodService.RegisterPaymentMethod<DefaultManualPaymentMethod>();
+            var paymentMethodsRegistrar = appBuilder.ApplicationServices.GetRequiredService<IPaymentMethodsRegistrar>();
+            paymentMethodsRegistrar.RegisterPaymentMethod<DefaultManualPaymentMethod>();
             settingsRegistrar.RegisterSettingsForType(ModuleConstants.Settings.DefaultManualPaymentMethod.AllSettings, typeof(DefaultManualPaymentMethod).Name);
 
             PolymorphJsonConverter.RegisterTypeForDiscriminator(typeof(PaymentMethod), nameof(PaymentMethod.TypeName));

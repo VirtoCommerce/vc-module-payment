@@ -16,18 +16,14 @@ using VirtoCommerce.Platform.Core.Settings;
 namespace VirtoCommerce.PaymentModule.Data.Services
 {
 
-    public class PaymentMethodsService : CrudService<PaymentMethod, StorePaymentMethodEntity, PaymentMethodChangeEvent, PaymentMethodChangedEvent>, IPaymentMethodsService
+    public class PaymentMethodsService : CrudService<PaymentMethod, StorePaymentMethodEntity, PaymentMethodChangeEvent, PaymentMethodChangedEvent>, IPaymentMethodsService, IPaymentMethodsRegistrar
     {
         private readonly ISettingsManager _settingManager;
+
         public PaymentMethodsService(Func<IPaymentRepository> repositoryFactory, IPlatformMemoryCache platformMemoryCache, IEventPublisher eventPublisher, ISettingsManager settingManager)
             : base(repositoryFactory, platformMemoryCache, eventPublisher)
         {
             _settingManager = settingManager;
-        }
-
-        protected override Task<IEnumerable<StorePaymentMethodEntity>> LoadEntities(IRepository repository, IEnumerable<string> ids, string responseGroup)
-        {
-            return ((IPaymentRepository)repository).GetByIdsAsync(ids);
         }
 
         public void RegisterPaymentMethod<T>(Func<T> factory = null) where T : PaymentMethod
@@ -49,6 +45,12 @@ namespace VirtoCommerce.PaymentModule.Data.Services
                 .Select(x => AbstractTypeFactory<PaymentMethod>.TryCreateInstance(x.Type.Name))
                 .ToArray());
             return result;
+        }
+
+
+        protected override Task<IEnumerable<StorePaymentMethodEntity>> LoadEntities(IRepository repository, IEnumerable<string> ids, string responseGroup)
+        {
+            return ((IPaymentRepository)repository).GetByIdsAsync(ids);
         }
 
         protected override PaymentMethod ProcessModel(string responseGroup, StorePaymentMethodEntity entity, PaymentMethod model)

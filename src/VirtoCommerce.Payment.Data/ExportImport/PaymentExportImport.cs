@@ -6,23 +6,25 @@ using Newtonsoft.Json;
 using VirtoCommerce.PaymentModule.Core.Model;
 using VirtoCommerce.PaymentModule.Core.Model.Search;
 using VirtoCommerce.PaymentModule.Core.Services;
+using VirtoCommerce.PaymentModule.Data.Model;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.ExportImport;
 using VirtoCommerce.Platform.Core.GenericCrud;
 using VirtoCommerce.Platform.Data.ExportImport;
+using VirtoCommerce.Platform.Data.GenericCrud;
 
 namespace VirtoCommerce.PaymentModule.Data.ExportImport
 {
     public sealed class PaymentExportImport
     {
-        private readonly IPaymentMethodsSearchService _paymentMethodsSearchService;
+        private readonly SearchService<PaymentMethodsSearchCriteria, PaymentMethodsSearchResult, PaymentMethod, StorePaymentMethodEntity> _paymentMethodsSearchService;
         private readonly ICrudService<PaymentMethod> _paymentMethodsService;
         private readonly JsonSerializer _jsonSerializer;
         private readonly int _batchSize = 50;
 
         public PaymentExportImport(IPaymentMethodsService paymentMethodsService, IPaymentMethodsSearchService paymentMethodsSearchService, JsonSerializer jsonSerializer)
         {
-            _paymentMethodsSearchService = paymentMethodsSearchService;
+            _paymentMethodsSearchService = (SearchService<PaymentMethodsSearchCriteria, PaymentMethodsSearchResult, PaymentMethod, StorePaymentMethodEntity>)paymentMethodsSearchService;
             _paymentMethodsService = (ICrudService<PaymentMethod>)paymentMethodsService;
             _jsonSerializer = jsonSerializer;
             
@@ -50,7 +52,7 @@ namespace VirtoCommerce.PaymentModule.Data.ExportImport
                     searchCriteria.Take = take;
                     searchCriteria.Skip = skip;
 
-                    var searchResult = await _paymentMethodsSearchService.SearchPaymentMethodsAsync(searchCriteria);
+                    var searchResult = await _paymentMethodsSearchService.SearchAsync(searchCriteria);
                     return (GenericSearchResult<PaymentMethod>)searchResult;
                 }, (processedCount, totalCount) =>
                 {
