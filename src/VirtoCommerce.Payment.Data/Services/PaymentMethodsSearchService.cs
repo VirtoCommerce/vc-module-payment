@@ -3,20 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 using VirtoCommerce.PaymentModule.Core.Model;
 using VirtoCommerce.PaymentModule.Core.Model.Search;
 using VirtoCommerce.PaymentModule.Core.Services;
-using VirtoCommerce.PaymentModule.Data.Caching;
 using VirtoCommerce.PaymentModule.Data.Model;
 using VirtoCommerce.PaymentModule.Data.Repositories;
-using VirtoCommerce.Platform.Caching;
 using VirtoCommerce.Platform.Core.Caching;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.GenericCrud;
 using VirtoCommerce.Platform.Core.Settings;
 using VirtoCommerce.Platform.Data.GenericCrud;
-using VirtoCommerce.Platform.Data.Infrastructure;
 
 namespace VirtoCommerce.PaymentModule.Data.Services
 {
@@ -30,12 +26,6 @@ namespace VirtoCommerce.PaymentModule.Data.Services
         {
             _settingsManager = settingsManager;
         }
-
-        public async override Task<PaymentMethodsSearchResult> SearchAsync(PaymentMethodsSearchCriteria criteria)
-        {
-            return await SearchPaymentMethodsAsync(criteria);
-        }
-
 
         protected override IQueryable<StorePaymentMethodEntity> BuildQuery(IRepository repository, PaymentMethodsSearchCriteria criteria)
         {
@@ -78,50 +68,7 @@ namespace VirtoCommerce.PaymentModule.Data.Services
             return sortInfos;
         }
 
-        private Task<PaymentMethodsSearchResult> SearchPaymentMethodsAsync(PaymentMethodsSearchCriteria criteria)
-        {
-            var cacheKey = CacheKey.With(GetType(), nameof(SearchAsync), criteria.GetCacheKey());
-            return  _platformMemoryCache.GetOrCreateExclusiveAsync(cacheKey, async cacheEntry =>
-            {
-                var result = AbstractTypeFactory<PaymentMethodsSearchResult>.TryCreateInstance();
-                cacheEntry.AddExpirationToken(GenericSearchCachingRegion<PaymentMethod>.CreateChangeToken());
-                using (var repository = _repositoryFactory())
-                {
-                    //Optimize performance and CPU usage
-                    repository.DisableChangesTracking();
-
-                    var sortInfos = BuildSortExpression(criteria);
-                    var query = BuildQuery(repository, criteria);
-
-                    var needExecuteCount = criteria.Take == 0;
-
-                    if (criteria.Take > 0)
-                    {
-                        var ids = await query.OrderBySortInfos(sortInfos).ThenBy(x => x.Id)
-                                         .Select(x => x.Id)
-                                         .Skip(criteria.Skip).Take(criteria.Take)
-                                         .ToArrayAsync();
-
-                        result.TotalCount = ids.Count();
-                        if (criteria.Skip > 0 || result.TotalCount == criteria.Take)
-
-                        {
-                            needExecuteCount = true;
-                        }
-                        result.Results = (await _crudService.GetByIdsAsync(ids, criteria.ResponseGroup)).OrderBy(x => Array.IndexOf(ids, x.Id)).ToList();
-                    }
-
-                    if (needExecuteCount)
-                    {
-                        result.TotalCount = await query.CountAsync();
-                    }
-                }
-                result = await ProcessPaymentMethodSearchResult(result, criteria);
-                return result;
-            });
-        }
-
-        private async Task<PaymentMethodsSearchResult> ProcessPaymentMethodSearchResult(PaymentMethodsSearchResult result, PaymentMethodsSearchCriteria criteria) {
+        protected override async Task<PaymentMethodsSearchResult> ProcessSearchResultAsync(PaymentMethodsSearchResult result, PaymentMethodsSearchCriteria criteria) {
             var tmpSkip = Math.Min(result.TotalCount, criteria.Skip);
             var tmpTake = Math.Min(criteria.Take, Math.Max(0, result.TotalCount - criteria.Skip));
             criteria.Skip -= tmpSkip;
