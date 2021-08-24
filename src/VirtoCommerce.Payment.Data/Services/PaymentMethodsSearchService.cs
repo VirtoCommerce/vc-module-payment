@@ -103,5 +103,12 @@ namespace VirtoCommerce.PaymentModule.Data.Services
 
             return result;
         }
+
+        #region IPaymentMethodsSearchService compatibility
+        public Task<PaymentMethodsSearchResult> SearchPaymentMethodsAsync(PaymentMethodsSearchCriteria criteria)
+        {
+            return SearchAsync(criteria);
+        }
+        #endregion
     }
 }
