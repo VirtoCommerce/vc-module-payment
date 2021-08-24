@@ -50,7 +50,7 @@ namespace VirtoCommerce.PaymentModule.Data.Services
 
         protected override Task<IEnumerable<StorePaymentMethodEntity>> LoadEntities(IRepository repository, IEnumerable<string> ids, string responseGroup)
         {
-            return ((IPaymentRepository)repository).GetByIdsAsync(ids);
+            return ((IPaymentRepository)repository).GetByIdsAsync(ids, responseGroup);
         }
 
         protected override PaymentMethod ProcessModel(string responseGroup, StorePaymentMethodEntity entity, PaymentMethod model)
