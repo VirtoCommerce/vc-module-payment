@@ -19,9 +19,13 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
-        <PackageReference Include="VirtoCommerce.Platform.Data" Version="3.74.0" />
+        <PackageReference Include="VirtoCommerce.Platform.Data" Version="3.75.0" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\VirtoCommerce.Payment.Core\VirtoCommerce.PaymentModule.Core.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <None Remove="VirtoCommerce.Platform.Data" />
+      <None Remove="VirtoCommerce.Platform.Core" />
     </ItemGroup>
 </Project>
