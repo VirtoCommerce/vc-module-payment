@@ -3,108 +3,33 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 using VirtoCommerce.PaymentModule.Core.Model;
 using VirtoCommerce.PaymentModule.Core.Model.Search;
 using VirtoCommerce.PaymentModule.Core.Services;
-using VirtoCommerce.PaymentModule.Data.Caching;
 using VirtoCommerce.PaymentModule.Data.Model;
 using VirtoCommerce.PaymentModule.Data.Repositories;
 using VirtoCommerce.Platform.Core.Caching;
 using VirtoCommerce.Platform.Core.Common;
+using VirtoCommerce.Platform.Core.GenericCrud;
 using VirtoCommerce.Platform.Core.Settings;
-using VirtoCommerce.Platform.Data.Infrastructure;
+using VirtoCommerce.Platform.Data.GenericCrud;
 
 namespace VirtoCommerce.PaymentModule.Data.Services
 {
-    public class PaymentMethodsSearchService : IPaymentMethodsSearchService
+    public class PaymentMethodsSearchService : SearchService<PaymentMethodsSearchCriteria, PaymentMethodsSearchResult, PaymentMethod, StorePaymentMethodEntity>,  IPaymentMethodsSearchService
     {
-        private readonly Func<IPaymentRepository> _repositoryFactory;
-        private readonly IPlatformMemoryCache _memCache;
-        private readonly IPaymentMethodsService _paymentMethodsService;
         private readonly ISettingsManager _settingsManager;
 
-        public PaymentMethodsSearchService(
-            Func<IPaymentRepository> repositoryFactory,
-            IPlatformMemoryCache memCache,
-            IPaymentMethodsService paymentMethodsService,
-            ISettingsManager settingsManager)
+        public PaymentMethodsSearchService(Func<IPaymentRepository> repositoryFactory, IPlatformMemoryCache platformMemoryCache,
+            IPaymentMethodsService paymentMethodsService, ISettingsManager settingsManager)
+           : base(repositoryFactory, platformMemoryCache, (ICrudService<PaymentMethod>)paymentMethodsService)
         {
-            _repositoryFactory = repositoryFactory;
-            _memCache = memCache;
-            _paymentMethodsService = paymentMethodsService;
             _settingsManager = settingsManager;
         }
 
-        public async Task<PaymentMethodsSearchResult> SearchPaymentMethodsAsync(PaymentMethodsSearchCriteria criteria)
+        protected override IQueryable<StorePaymentMethodEntity> BuildQuery(IRepository repository, PaymentMethodsSearchCriteria criteria)
         {
-            var cacheKey = CacheKey.With(GetType(), nameof(PaymentMethodsSearchResult), criteria.GetCacheKey());
-            return await _memCache.GetOrCreateExclusiveAsync(cacheKey, async (cacheEntry) =>
-            {
-                cacheEntry.AddExpirationToken(PaymentCacheRegion.CreateChangeToken());
-                var result = AbstractTypeFactory<PaymentMethodsSearchResult>.TryCreateInstance();
-
-                var tmpSkip = 0;
-                var tmpTake = 0;
-
-                var sortInfos = BuildSortExpression(criteria);
-
-                using (var repository = _repositoryFactory())
-                {
-                    repository.DisableChangesTracking();
-                    var query = BuildQuery(repository, criteria);
-
-                    result.TotalCount = await query.CountAsync();
-                    if (criteria.Take > 0)
-                    {
-                        var paymentMethodsIds = await query.OrderBySortInfos(sortInfos)
-                                                           .Select(x => x.Id)
-                                                           .Skip(criteria.Skip).Take(criteria.Take)
-                                                           .ToArrayAsync();
-
-                        var unorderedResults = await _paymentMethodsService.GetByIdsAsync(paymentMethodsIds, criteria.ResponseGroup);
-                        result.Results = unorderedResults.OrderBy(x => Array.IndexOf(paymentMethodsIds, x.Id)).ToList();
-                    }
-                }
-                //Need to concatenate  persistent methods with registered types and still not persisted
-                tmpSkip = Math.Min(result.TotalCount, criteria.Skip);
-                tmpTake = Math.Min(criteria.Take, Math.Max(0, result.TotalCount - criteria.Skip));
-                criteria.Skip -= tmpSkip;
-                criteria.Take -= tmpTake;
-                if (criteria.Take > 0 && !criteria.WithoutTransient)
-                {
-                    var transientMethodsQuery = AbstractTypeFactory<PaymentMethod>.AllTypeInfos.Select(x => AbstractTypeFactory<PaymentMethod>.TryCreateInstance(x.Type.Name))
-                                                                                  .OfType<PaymentMethod>().AsQueryable();
-                    if (!string.IsNullOrEmpty(criteria.Keyword))
-                    {
-                        transientMethodsQuery = transientMethodsQuery.Where(x => x.Code.Contains(criteria.Keyword));
-                    }
-
-                    if (criteria.IsActive.HasValue)
-                    {
-                        transientMethodsQuery = transientMethodsQuery.Where(x => x.IsActive == criteria.IsActive.Value);
-                    }
-                    var allPersistentTypes = result.Results.Select(x => x.GetType()).Distinct();
-                    transientMethodsQuery = transientMethodsQuery.Where(x => !allPersistentTypes.Contains(x.GetType()));
-
-                    result.TotalCount += transientMethodsQuery.Count();
-                    var transientProviders = transientMethodsQuery.Skip(criteria.Skip).Take(criteria.Take).ToList();
-
-                    foreach (var transientProvider in transientProviders)
-                    {
-                        await _settingsManager.DeepLoadSettingsAsync(transientProvider);
-                    }
-
-                    result.Results = result.Results.Concat(transientProviders).AsQueryable().OrderBySortInfos(sortInfos).ToList();
-                }
-
-                return result;
-            });
-        }
-
-        protected virtual IQueryable<StorePaymentMethodEntity> BuildQuery(IPaymentRepository repository, PaymentMethodsSearchCriteria criteria)
-        {
-            var query = repository.StorePaymentMethods;
+            var query = ((IPaymentRepository)repository).PaymentMethods;
 
             if (!string.IsNullOrEmpty(criteria.Keyword))
             {
@@ -129,7 +54,7 @@ namespace VirtoCommerce.PaymentModule.Data.Services
             return query;
         }
 
-        protected virtual IList<SortInfo> BuildSortExpression(PaymentMethodsSearchCriteria criteria)
+        protected override IList<SortInfo> BuildSortExpression(PaymentMethodsSearchCriteria criteria)
         {
             var sortInfos = criteria.SortInfos;
             if (sortInfos.IsNullOrEmpty())
@@ -142,5 +67,48 @@ namespace VirtoCommerce.PaymentModule.Data.Services
 
             return sortInfos;
         }
+
+        protected override async Task<PaymentMethodsSearchResult> ProcessSearchResultAsync(PaymentMethodsSearchResult result, PaymentMethodsSearchCriteria criteria) {
+            var tmpSkip = Math.Min(result.TotalCount, criteria.Skip);
+            var tmpTake = Math.Min(criteria.Take, Math.Max(0, result.TotalCount - criteria.Skip));
+            criteria.Skip -= tmpSkip;
+            criteria.Take -= tmpTake;
+            if (criteria.Take > 0 && !criteria.WithoutTransient)
+            {
+                var transientMethodsQuery = AbstractTypeFactory<PaymentMethod>.AllTypeInfos.Select(x => AbstractTypeFactory<PaymentMethod>.TryCreateInstance(x.Type.Name))
+                                                                              .OfType<PaymentMethod>().AsQueryable();
+                if (!string.IsNullOrEmpty(criteria.Keyword))
+                {
+                    transientMethodsQuery = transientMethodsQuery.Where(x => x.Code.Contains(criteria.Keyword));
+                }
+
+                if (criteria.IsActive.HasValue)
+                {
+                    transientMethodsQuery = transientMethodsQuery.Where(x => x.IsActive == criteria.IsActive.Value);
+                }
+                var allPersistentTypes = result.Results.Select(x => x.GetType()).Distinct();
+                transientMethodsQuery = transientMethodsQuery.Where(x => !allPersistentTypes.Contains(x.GetType()));
+
+                result.TotalCount += transientMethodsQuery.Count();
+                var transientProviders = transientMethodsQuery.Skip(criteria.Skip).Take(criteria.Take).ToList();
+
+                foreach (var transientProvider in transientProviders)
+                {
+                    await _settingsManager.DeepLoadSettingsAsync(transientProvider);
+                }
+
+                var sortInfos = BuildSortExpression(criteria);
+                result.Results = result.Results.Concat(transientProviders).AsQueryable().OrderBySortInfos(sortInfos).ToList();
+            }
+
+            return result;
+        }
+
+        #region IPaymentMethodsSearchService compatibility
+        public Task<PaymentMethodsSearchResult> SearchPaymentMethodsAsync(PaymentMethodsSearchCriteria criteria)
+        {
+            return SearchAsync(criteria);
+        }
+        #endregion
     }
 }

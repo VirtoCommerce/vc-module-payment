@@ -1,9 +1,10 @@
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VirtoCommerce.PaymentModule.Core.Model;
 using VirtoCommerce.PaymentModule.Core.Model.Search;
 using VirtoCommerce.PaymentModule.Core.Services;
+using VirtoCommerce.Platform.Core.GenericCrud;
 
 namespace VirtoCommerce.PaymentModule.Web.Controllers.Api
 {
@@ -11,19 +12,16 @@ namespace VirtoCommerce.PaymentModule.Web.Controllers.Api
     [Authorize]
     public class PaymentModuleController : Controller
     {
-        private readonly IPaymentMethodsSearchService _paymentMethodsSearchService;
-        private readonly IPaymentMethodsService _paymentMethodsService;
-        private readonly IPaymentMethodsRegistrar _paymentMethodsRegistrar;
 
-        public PaymentModuleController(
-            IPaymentMethodsSearchService paymentMethodsSearchService,
-            IPaymentMethodsService paymentMethodsService,
-            IPaymentMethodsRegistrar paymentMethodsRegistrar
-            )
+        private readonly ISearchService<PaymentMethodsSearchCriteria, PaymentMethodsSearchResult, PaymentMethod> _paymentMethodsSearchService;
+        private readonly IPaymentMethodsRegistrar _paymentMethodsRegistrar;
+        private readonly ICrudService<PaymentMethod> _paymentMethodCrudService;
+
+        public PaymentModuleController(IPaymentMethodsSearchService paymentMethodsSearchService, IPaymentMethodsService paymentMethodsService)
         {
-            _paymentMethodsSearchService = paymentMethodsSearchService;
-            _paymentMethodsService = paymentMethodsService;
-            _paymentMethodsRegistrar = paymentMethodsRegistrar;
+            _paymentMethodsSearchService = (ISearchService<PaymentMethodsSearchCriteria, PaymentMethodsSearchResult, PaymentMethod>)paymentMethodsSearchService;
+            _paymentMethodsRegistrar = (IPaymentMethodsRegistrar)paymentMethodsService;
+            _paymentMethodCrudService = (ICrudService<PaymentMethod>)paymentMethodsService;
         }
 
         [HttpGet]
@@ -38,7 +36,7 @@ namespace VirtoCommerce.PaymentModule.Web.Controllers.Api
         [Route("search")]
         public async Task<ActionResult<PaymentMethodsSearchResult>> SearchPaymentMethods([FromBody] PaymentMethodsSearchCriteria criteria)
         {
-            var result = await _paymentMethodsSearchService.SearchPaymentMethodsAsync(criteria);
+            var result = await _paymentMethodsSearchService.SearchAsync(criteria);
             return Ok(result);
         }
 
@@ -46,7 +44,7 @@ namespace VirtoCommerce.PaymentModule.Web.Controllers.Api
         [Route("{id}")]
         public async Task<ActionResult<PaymentMethod>> GetPaymentMethodById(string id)
         {
-            var result = await _paymentMethodsService.GetByIdAsync(id, null);
+            var result = await _paymentMethodCrudService.GetByIdAsync(id, null);
             return Ok(result);
         }
 
@@ -54,7 +52,7 @@ namespace VirtoCommerce.PaymentModule.Web.Controllers.Api
         [Route("")]
         public async Task<ActionResult<PaymentMethod>> UpdatePaymentMethod([FromBody] PaymentMethod paymentMethod)
         {
-            await _paymentMethodsService.SaveChangesAsync(new[] { paymentMethod });
+            await _paymentMethodCrudService.SaveChangesAsync(new[] { paymentMethod });
             return Ok(paymentMethod);
         }
     }
