@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using VirtoCommerce.PaymentModule.Core.Model;
 using VirtoCommerce.PaymentModule.Core.Model.Search;
 using VirtoCommerce.PaymentModule.Core.Services;
