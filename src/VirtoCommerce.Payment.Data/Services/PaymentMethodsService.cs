@@ -65,14 +65,14 @@ namespace VirtoCommerce.PaymentModule.Data.Services
             return null;
         }
 
-        protected override async Task AfterSaveChangesAsync(IEnumerable<PaymentMethod> models, IEnumerable<GenericChangedEntry<PaymentMethod>> changedEntries)
+        protected override Task AfterSaveChangesAsync(IEnumerable<PaymentMethod> models, IEnumerable<GenericChangedEntry<PaymentMethod>> changedEntries)
         {
-            await _settingManager.DeepSaveSettingsAsync(models);
+            return _settingManager.DeepSaveSettingsAsync(models);
         }
 
-        protected override async Task AfterDeleteAsync(IEnumerable<PaymentMethod> models, IEnumerable<GenericChangedEntry<PaymentMethod>> changedEntries)
+        protected override Task AfterDeleteAsync(IEnumerable<PaymentMethod> models, IEnumerable<GenericChangedEntry<PaymentMethod>> changedEntries)
         {
-            await _settingManager.DeepRemoveSettingsAsync(models);
+            return _settingManager.DeepRemoveSettingsAsync(models);
         }
 
 
