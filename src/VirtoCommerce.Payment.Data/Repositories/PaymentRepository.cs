@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -12,11 +13,11 @@ namespace VirtoCommerce.PaymentModule.Data.Repositories
         {
         }
 
-        public IQueryable<StorePaymentMethodEntity> StorePaymentMethods => DbContext.Set<StorePaymentMethodEntity>();
+        public IQueryable<StorePaymentMethodEntity> PaymentMethods => DbContext.Set<StorePaymentMethodEntity>();
 
-        public async Task<StorePaymentMethodEntity[]> GetStorePaymentMethodsByIdsAsync(string[] ids, string responseGroup = null)
+        public async Task<IEnumerable<StorePaymentMethodEntity>> GetByIdsAsync(IEnumerable<string> ids, string responseGroup = null)
         {
-            return await StorePaymentMethods.Where(x => ids.Contains(x.Id))
+            return await PaymentMethods.Where(x => ids.Contains(x.Id))
                                             .ToArrayAsync();
         }
     }

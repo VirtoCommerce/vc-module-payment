@@ -2,10 +2,11 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using VirtoCommerce.PaymentModule.Core.Model;
 using VirtoCommerce.Platform.Core.Common;
+using VirtoCommerce.Platform.Core.Domain;
 
 namespace VirtoCommerce.PaymentModule.Data.Model
 {
-    public class StorePaymentMethodEntity : Entity
+    public class StorePaymentMethodEntity : Entity, IDataEntity<StorePaymentMethodEntity, PaymentMethod>
     {
         [Required]
         [StringLength(128)]
