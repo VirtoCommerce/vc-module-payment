@@ -1,3 +1,4 @@
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using VirtoCommerce.PaymentModule.Data.Model;
@@ -7,7 +8,7 @@ namespace VirtoCommerce.PaymentModule.Data.Repositories
 {
     public interface IPaymentRepository : IRepository
     {
-        IQueryable<StorePaymentMethodEntity> StorePaymentMethods { get; }
-        Task<StorePaymentMethodEntity[]> GetStorePaymentMethodsByIdsAsync(string[] ids, string responseGroup = null);
+        IQueryable<StorePaymentMethodEntity> PaymentMethods { get; }
+        Task<IEnumerable<StorePaymentMethodEntity>> GetByIdsAsync(IEnumerable<string> ids, string responseGroup = null);
     }
 }

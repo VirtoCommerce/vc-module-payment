@@ -1,4 +1,4 @@
-angular.module('virtoCommerce.paymentModule').controller('virtoCommerce.paymentModule.paymentMethodDetailController', ['$scope', 'platformWebApp.bladeNavigationService', 'virtoCommerce.paymentModule.paymentMethods', function ($scope, bladeNavigationService, paymentMethods) {
+angular.module('virtoCommerce.paymentModule').controller('virtoCommerce.paymentModule.paymentMethodDetailController', ['$scope', 'platformWebApp.bladeNavigationService', 'virtoCommerce.paymentModule.paymentMethods', 'platformWebApp.settings.helper', function ($scope, bladeNavigationService, paymentMethods, settingshelper) {
     var blade = $scope.blade;
 
     function initializeBlade(data) {
@@ -42,6 +42,8 @@ angular.module('virtoCommerce.paymentModule').controller('virtoCommerce.paymentM
 
     $scope.saveChanges = function () {
         blade.isLoading = true;
+
+        settingshelper.toApiFormat(blade.currentEntity.settings);
 
         blade.currentEntity.storeId = blade.storeId;
         paymentMethods.update({}, blade.currentEntity, function (data) {

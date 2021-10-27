@@ -2,20 +2,19 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using VirtoCommerce.PaymentModule.Core;
+using VirtoCommerce.PaymentModule.Core.Model;
 using VirtoCommerce.PaymentModule.Core.Services;
 using VirtoCommerce.PaymentModule.Data;
 using VirtoCommerce.PaymentModule.Data.ExportImport;
 using VirtoCommerce.PaymentModule.Data.Repositories;
 using VirtoCommerce.PaymentModule.Data.Services;
-using VirtoCommerce.PaymentModule.Web.JsonConverters;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.ExportImport;
+using VirtoCommerce.Platform.Core.JsonConverters;
 using VirtoCommerce.Platform.Core.Modularity;
 using VirtoCommerce.Platform.Core.Settings;
 using VirtoCommerce.Platform.Data.Extensions;
@@ -53,8 +52,7 @@ namespace VirtoCommerce.PaymentModule.Web
             paymentMethodsRegistrar.RegisterPaymentMethod<DefaultManualPaymentMethod>();
             settingsRegistrar.RegisterSettingsForType(ModuleConstants.Settings.DefaultManualPaymentMethod.AllSettings, typeof(DefaultManualPaymentMethod).Name);
 
-            var mvcJsonOptions = appBuilder.ApplicationServices.GetService<IOptions<MvcNewtonsoftJsonOptions>>();
-            mvcJsonOptions.Value.SerializerSettings.Converters.Add(new PolymorphicJsonConverter(paymentMethodsRegistrar));
+            PolymorphJsonConverter.RegisterTypeForDiscriminator(typeof(PaymentMethod), nameof(PaymentMethod.TypeName));
 
             using (var serviceScope = appBuilder.ApplicationServices.CreateScope())
             {
