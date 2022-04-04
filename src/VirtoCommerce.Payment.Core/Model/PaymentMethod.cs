@@ -54,6 +54,8 @@ namespace VirtoCommerce.PaymentModule.Core.Model
 
         public string StoreId { get; set; }
 
+        public string Description { get; set; }
+
         #region IHasSettings Members
 
         public virtual string TypeName => GetType().Name;
