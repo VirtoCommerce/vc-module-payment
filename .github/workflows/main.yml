@@ -1,4 +1,4 @@
-# v1.1.10
+# v1.1.12
 name: Module CI
 
 on:
@@ -33,6 +33,7 @@ jobs:
       CLOUD_INSTANCE_BASE_URL: ${{secrets.CLOUD_INSTANCE_BASE_URL}}
       CLIENT_ID: ${{secrets.CLIENT_ID}}
       CLIENT_SECRET: ${{secrets.CLIENT_SECRET}}
+      SONAR_TOKEN: ${{secrets.SONAR_TOKEN}}
       GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
       NUGET_KEY: ${{ secrets.NUGET_KEY }}
       BLOB_SAS: ${{ secrets.BLOB_TOKEN }}
@@ -41,7 +42,7 @@ jobs:
       RELEASE_STATUS: 'false'
 
     outputs:
-      artifactUrl: ${{ steps.blobRelease.outputs.packageUrl }}
+      artifactUrl: ${{ steps.artifactUrl.outputs.download_url }}
       jira-keys: ${{ steps.jira_keys.outputs.jira-keys }}
 
     steps:
@@ -55,27 +56,26 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: '6.0.x'
-
       - name: Install VirtoCommerce.GlobalTool
-        run: dotnet tool install --global VirtoCommerce.GlobalTool --version 2.1.0-alpha.17
+        uses: VirtoCommerce/vc-github-actions/setup-vcbuild@master
 
-      - name: Get changelog
+      - name: Install dotnet-sonarscanner
+        run: dotnet tool install --global dotnet-sonarscanner
+
+      - name: Get Changelog
         id: changelog
         uses: VirtoCommerce/vc-github-actions/changelog-generator@master
 
-      - name: Get Image Version
+      - name: Get Artifact Version
         uses: VirtoCommerce/vc-github-actions/get-image-version@master
-        id: image
+        id: artifact_ver
 
       - name: Set VERSION_SUFFIX variable
         run: |
           if [ '${{ github.event_name }}' = 'workflow_dispatch' ]; then
-            echo "VERSION_SUFFIX=${{ steps.image.outputs.fullSuffix }}" >> $GITHUB_ENV
+            echo "VERSION_SUFFIX=${{ steps.artifact_ver.outputs.fullSuffix }}" >> $GITHUB_ENV
           else
-            echo "VERSION_SUFFIX=${{ steps.image.outputs.suffix }}" >> $GITHUB_ENV
+            echo "VERSION_SUFFIX=${{ steps.artifact_ver.outputs.suffix }}" >> $GITHUB_ENV
           fi;
       - name: Add version suffix
         if: ${{ github.ref != 'refs/heads/master' }}
@@ -83,11 +83,22 @@ jobs:
         with:
           versionSuffix: ${{ env.VERSION_SUFFIX }}
 
+      - name: SonarCloud Begin
+        uses: VirtoCommerce/vc-github-actions/sonar-scanner-begin@master
+
       - name: Build
         run: vc-build Compile
 
       - name: Unit Tests
         run: vc-build Test -skip
+
+      - name: SonarCloud End
+        uses: VirtoCommerce/vc-github-actions/sonar-scanner-end@master
+
+      - name: Quality Gate
+        uses: VirtoCommerce/vc-github-actions/sonar-quality-gate@master
+        with:
+          login: ${{secrets.SONAR_TOKEN}}
 
       - name: Packaging
         run: vc-build Compress -skip Clean+Restore+Compile+Test
@@ -120,9 +131,19 @@ jobs:
 
       - name: Publish Github Release
         if: ${{ github.ref == 'refs/heads/master' }}
+        id: githubRelease
         with:
           changelog: ${{ steps.changelog.outputs.changelog }}
         uses: VirtoCommerce/vc-github-actions/publish-github-release@master
+        
+      - name: Set artifactUrl value
+        id: artifactUrl
+        run: |
+          if [ '${{ github.ref }}' = 'refs/heads/master' ]; then
+            echo ::set-output name=download_url::${{ steps.githubRelease.outputs.downloadUrl }}
+          else
+            echo ::set-output name=download_url::${{ steps.blobRelease.outputs.packageUrl }}
+          fi;
 
       - name: Setup Git Credentials
         if: ${{ (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/master') && github.event_name != 'workflow_dispatch' }}
@@ -143,10 +164,10 @@ jobs:
           githubToken: ${{ secrets.REPO_TOKEN }}
           login: ${{ secrets.VIRTOCOMMERCE_APP_ID }}
           password: ${{ secrets.VIRTOCOMMERCE_SECRET }}
-          moduleId: ${{ steps.image.outputs.moduleId }}
-          moduleDescription: ${{ steps.image.outputs.moduleDescription }}
-          projectUrl: ${{ steps.image.outputs.projectUrl }}
-          iconUrl: ${{ steps.image.outputs.iconUrl }}
+          moduleId: ${{ steps.artifact_ver.outputs.moduleId }}
+          moduleDescription: ${{ steps.artifact_ver.outputs.moduleDescription }}
+          projectUrl: ${{ steps.artifact_ver.outputs.projectUrl }}
+          iconUrl: ${{ steps.artifact_ver.outputs.iconUrl }}
 
       - name: Parse Jira Keys from All Commits
         uses: VirtoCommerce/vc-github-actions/get-jira-keys@master
@@ -183,7 +204,7 @@ jobs:
           echo "Jira Upload Build Info response: ${{ steps.push_build_info_to_jira.outputs.response }}"
 
   deploy:
-    if: ${{ github.event_name != 'pull_request' && github.event_name != 'workflow_dispatch' }}
+    if: ${{ (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/master') && github.event_name == 'push' }}
     needs: ci
     runs-on: ubuntu-latest
     env:

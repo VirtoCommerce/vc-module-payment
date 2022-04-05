@@ -25,6 +25,8 @@ namespace VirtoCommerce.PaymentModule.Data.Model
 
         public string StoreId { get; set; }
 
+        public string Description { get; set; }
+
         public virtual PaymentMethod ToModel(PaymentMethod paymentMethod)
         {
             if (paymentMethod == null)
@@ -37,6 +39,7 @@ namespace VirtoCommerce.PaymentModule.Data.Model
             paymentMethod.LogoUrl = LogoUrl;
             paymentMethod.Priority = Priority;
             paymentMethod.StoreId = StoreId;
+            paymentMethod.Description = Description;
 
             return paymentMethod;
         }
@@ -56,6 +59,7 @@ namespace VirtoCommerce.PaymentModule.Data.Model
             Priority = paymentMethod.Priority;
             StoreId = paymentMethod.StoreId;
             TypeName = paymentMethod.TypeName;
+            Description = paymentMethod.Description;
 
             return this;
         }
@@ -71,6 +75,7 @@ namespace VirtoCommerce.PaymentModule.Data.Model
             target.LogoUrl = LogoUrl;
             target.Priority = Priority;
             target.StoreId = StoreId;
+            target.Description = Description;
         }
     }
 }
