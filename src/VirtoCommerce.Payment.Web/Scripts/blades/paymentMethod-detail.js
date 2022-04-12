@@ -2,7 +2,7 @@ angular.module('virtoCommerce.paymentModule').controller('virtoCommerce.paymentM
     var blade = $scope.blade;
 
     function initializeBlade(data) {
-        blade.title = 'payment.labels.' + data.typeName + '.name';
+        blade.title = data.name ? data.name : 'payment.labels.' + data.typeName + '.name';
         blade.currentEntity = angular.copy(data);
         blade.origEntity = data;
         blade.isLoading = false;
