@@ -17,13 +17,11 @@ namespace VirtoCommerce.PaymentModule.Core.Model
             Settings = Array.Empty<ObjectSettingEntry>();
         }
 
-        public string Name { get; set; }
-
         /// <summary>
         /// Method identity property (system name)
         /// </summary>
         public string Code { get; set; }
-
+        public string Name { get; set; }
         public string LogoUrl { get; set; }
         public bool IsActive { get; set; }
         public int Priority { get; set; }
