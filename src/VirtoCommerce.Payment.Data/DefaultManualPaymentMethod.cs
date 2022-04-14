@@ -8,10 +8,8 @@ namespace VirtoCommerce.PaymentModule.Data
     {
         public DefaultManualPaymentMethod() : base("DefaultManualPaymentMethod")
         {
+            Name = "Test payment method";
         }
-
-        [Obsolete("Need to use localized strings on clients side instead")]
-        public string Name => "Test payment method";
 
         public override PaymentMethodType PaymentMethodType => PaymentMethodType.Unknown;
 
