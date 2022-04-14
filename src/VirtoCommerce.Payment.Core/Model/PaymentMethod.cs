@@ -13,9 +13,11 @@ namespace VirtoCommerce.PaymentModule.Core.Model
     {
         protected PaymentMethod(string code)
         {
-            Code = code;
+            Code = Name = code;
             Settings = Array.Empty<ObjectSettingEntry>();
         }
+
+        public string Name { get; set; }
 
         /// <summary>
         /// Method identity property (system name)
