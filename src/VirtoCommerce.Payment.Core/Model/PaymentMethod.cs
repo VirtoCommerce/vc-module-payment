@@ -13,7 +13,7 @@ namespace VirtoCommerce.PaymentModule.Core.Model
     {
         protected PaymentMethod(string code)
         {
-            Code = code;
+            Code = Name = code;
             Settings = Array.Empty<ObjectSettingEntry>();
         }
 
@@ -21,13 +21,7 @@ namespace VirtoCommerce.PaymentModule.Core.Model
         /// Method identity property (system name)
         /// </summary>
         public string Code { get; set; }
-
-        /// <summary>
-        /// It's the same as <see>Code</see>. Left for backward compatibility. Should be removed in future.
-        /// </summary>
-        [Obsolete("Left for backward compatibility. Should be removed in future. Use Code.")]
-        public string Name => Code;
-
+        public string Name { get; set; }
         public string LogoUrl { get; set; }
         public bool IsActive { get; set; }
         public int Priority { get; set; }

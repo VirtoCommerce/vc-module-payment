@@ -1,4 +1,4 @@
-angular.module('virtoCommerce.paymentModule').controller('virtoCommerce.paymentModule.paymentMethodListController', ['$scope', 'platformWebApp.bladeNavigationService', 'virtoCommerce.paymentModule.paymentMethods', function ($scope, bladeNavigationService, paymentMethods) {
+angular.module('virtoCommerce.paymentModule').controller('virtoCommerce.paymentModule.paymentMethodListController', ['$scope', '$translate', 'platformWebApp.bladeNavigationService', 'virtoCommerce.paymentModule.paymentMethods', function ($scope, $translate, bladeNavigationService, paymentMethods) {
     var blade = $scope.blade;
 
     function initializeBlade() {
@@ -32,6 +32,18 @@ angular.module('virtoCommerce.paymentModule').controller('virtoCommerce.paymentM
             storeId: blade.storeId
         }, function (data) {
             blade.isLoading = false;
+
+            _.each(data.results, function (item) {
+                var nameTranslationKey = "payment.labels." + item.typeName + ".name";
+                var descriptionTranslateKey = "payment.labels." + item.typeName + ".description";
+
+                var nameResult = $translate.instant(nameTranslationKey);
+                var displayDescription = $translate.instant(descriptionTranslateKey);
+
+                item.displayName = nameResult === nameTranslationKey ? item.name : nameResult;
+                item.displayDescription = displayDescription === descriptionTranslateKey ? item.description : displayDescription;
+            });
+
             blade.currentEntities = data.results;
             blade.selectedPaymentMethods = _.findWhere(blade.currentEntities, { isActive: true });
         }, function (error) {
