@@ -28,10 +28,12 @@
                             </td>
                             <td class="table-col __product-name" ng-click='selectNode(data)'>
                                 <span>
-                                    <div class="table-t">{{"payment.labels." + data.typeName + ".name" | translate }}
+                                    <div class="table-t">
+                                        {{ data.displayName }}
                                     </div>
                                     <div class="table-descr">
-                                        {{"payment.labels." + data.typeName + ".description" | translate }}</div>
+                                        {{ data.displayDescription }}
+                                    </div>
                                 </span>
                             </td>
                         </tr>
