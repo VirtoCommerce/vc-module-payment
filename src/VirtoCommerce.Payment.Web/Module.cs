@@ -30,10 +30,12 @@ namespace VirtoCommerce.PaymentModule.Web
 
         public void Initialize(IServiceCollection serviceCollection)
         {
-            var snapshot = serviceCollection.BuildServiceProvider();
-            var configuration = snapshot.GetService<IConfiguration>();
-            var connectionString = configuration.GetConnectionString("VirtoCommerce.Payment") ?? configuration.GetConnectionString("VirtoCommerce");
-            serviceCollection.AddDbContext<PaymentDbContext>(options => options.UseSqlServer(connectionString));
+            serviceCollection.AddDbContext<PaymentDbContext>((provider, options) =>
+            {
+                var configuration = provider.GetRequiredService<IConfiguration>();
+                options.UseSqlServer(configuration.GetConnectionString(ModuleInfo.Id) ?? configuration.GetConnectionString("VirtoCommerce"));
+            });
+
             serviceCollection.AddTransient<IPaymentRepository, PaymentRepository>();
             serviceCollection.AddTransient<Func<IPaymentRepository>>(provider => () => provider.CreateScope().ServiceProvider.GetService<IPaymentRepository>());
             serviceCollection.AddTransient<ISearchService<PaymentMethodsSearchCriteria, PaymentMethodsSearchResult, PaymentMethod>, PaymentMethodsSearchService>();
