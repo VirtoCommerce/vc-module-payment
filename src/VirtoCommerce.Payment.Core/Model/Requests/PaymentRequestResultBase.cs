@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using VirtoCommerce.PaymentModule.Core.Model;
 using VirtoCommerce.Platform.Core.Common;
 
@@ -9,5 +10,7 @@ namespace VirtoCommerce.PaymentModule.Model.Requests
         public bool IsSuccess { get; set; }
         public string ErrorMessage { get; set; }
         public PaymentStatus NewPaymentStatus { get; set; }
+
+        public Dictionary<string, string> PublicParameters { get; set; }
     }
 }
