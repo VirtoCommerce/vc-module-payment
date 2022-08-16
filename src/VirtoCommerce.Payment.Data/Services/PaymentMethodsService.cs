@@ -55,7 +55,8 @@ namespace VirtoCommerce.PaymentModule.Data.Services
 
         protected override PaymentMethod ProcessModel(string responseGroup, StorePaymentMethodEntity entity, PaymentMethod model)
         {
-            _eventPublisher.Publish(new PaymentMethodInstancingEvent(entity.Code)).GetAwaiter().GetResult();
+            // throw this event in case there're modules than need some special work done before instancing a payment method (NativePaymentMethods for example)
+            _eventPublisher.Publish(new PaymentMethodInstancingEvent { PaymentMethodCode = entity.Code }).GetAwaiter().GetResult();
 
             var paymentMethod = AbstractTypeFactory<PaymentMethod>.TryCreateInstance(string.IsNullOrEmpty(entity.TypeName) ? entity.Code : entity.TypeName);
             if (paymentMethod != null)
