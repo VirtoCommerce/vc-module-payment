@@ -28,7 +28,7 @@ on:
 jobs:
   ci:
     if: ${{ github.actor != 'dependabot[bot]' && (github.event.pull_request.head.repo.full_name == github.repository || github.event.pull_request.head.repo.full_name == '') }}  # Check that PR not from forked repo and not from Dependabot
-    runs-on: ubuntu-18.04
+    runs-on: windows-2022
     env:
       CLOUD_INSTANCE_BASE_URL: ${{secrets.CLOUD_INSTANCE_BASE_URL}}
       CLIENT_ID: ${{secrets.CLIENT_ID}}
