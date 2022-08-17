@@ -60,6 +60,11 @@ jobs:
       - name: Install VirtoCommerce.GlobalTool
         uses: VirtoCommerce/vc-github-actions/setup-vcbuild@master
 
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'microsoft'
+          java-version: '11'
+      
       - name: Install dotnet-sonarscanner
         run: dotnet tool install --global dotnet-sonarscanner
 
