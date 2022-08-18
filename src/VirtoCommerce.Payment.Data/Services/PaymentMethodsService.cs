@@ -56,7 +56,10 @@ namespace VirtoCommerce.PaymentModule.Data.Services
         protected override PaymentMethod ProcessModel(string responseGroup, StorePaymentMethodEntity entity, PaymentMethod model)
         {
             // throw this event in case there're modules than need some special work done before instancing a payment method (NativePaymentMethods for example)
-            _eventPublisher.Publish(new PaymentMethodInstancingEvent { PaymentMethodCode = entity.Code }).GetAwaiter().GetResult();
+            _eventPublisher.Publish(new PaymentMethodInstancingEvent
+            {
+                PaymentMethodCodes = new List<string> { entity.Code }
+            }).GetAwaiter().GetResult();
 
             var paymentMethod = AbstractTypeFactory<PaymentMethod>.TryCreateInstance(string.IsNullOrEmpty(entity.TypeName) ? entity.Code : entity.TypeName);
             if (paymentMethod != null)
@@ -66,6 +69,14 @@ namespace VirtoCommerce.PaymentModule.Data.Services
                 return paymentMethod;
             }
             return null;
+        }
+
+        protected override async Task BeforeSaveChanges(IEnumerable<PaymentMethod> models)
+        {
+            var codes = models.Select(x => x.Code).ToList();
+            await _eventPublisher.Publish(new PaymentMethodInstancingEvent { PaymentMethodCodes = codes });
+
+            await base.BeforeSaveChanges(models);
         }
 
         protected override Task AfterSaveChangesAsync(IEnumerable<PaymentMethod> models, IEnumerable<GenericChangedEntry<PaymentMethod>> changedEntries)
