@@ -71,14 +71,6 @@ namespace VirtoCommerce.PaymentModule.Data.Services
             return null;
         }
 
-        protected override async Task BeforeSaveChanges(IEnumerable<PaymentMethod> models)
-        {
-            var codes = models.Select(x => x.Code).ToList();
-            await _eventPublisher.Publish(new PaymentMethodInstancingEvent { PaymentMethodCodes = codes });
-
-            await base.BeforeSaveChanges(models);
-        }
-
         protected override Task AfterSaveChangesAsync(IEnumerable<PaymentMethod> models, IEnumerable<GenericChangedEntry<PaymentMethod>> changedEntries)
         {
             return _settingManager.DeepSaveSettingsAsync(models);
