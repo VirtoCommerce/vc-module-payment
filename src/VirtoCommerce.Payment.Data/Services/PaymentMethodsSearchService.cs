@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using VirtoCommerce.PaymentModule.Core.Events;
 using VirtoCommerce.PaymentModule.Core.Model;
 using VirtoCommerce.PaymentModule.Core.Model.Search;
 using VirtoCommerce.PaymentModule.Core.Services;
@@ -9,21 +10,24 @@ using VirtoCommerce.PaymentModule.Data.Model;
 using VirtoCommerce.PaymentModule.Data.Repositories;
 using VirtoCommerce.Platform.Core.Caching;
 using VirtoCommerce.Platform.Core.Common;
+using VirtoCommerce.Platform.Core.Events;
 using VirtoCommerce.Platform.Core.GenericCrud;
 using VirtoCommerce.Platform.Core.Settings;
 using VirtoCommerce.Platform.Data.GenericCrud;
 
 namespace VirtoCommerce.PaymentModule.Data.Services
 {
-    public class PaymentMethodsSearchService : SearchService<PaymentMethodsSearchCriteria, PaymentMethodsSearchResult, PaymentMethod, StorePaymentMethodEntity>,  IPaymentMethodsSearchService
+    public class PaymentMethodsSearchService : SearchService<PaymentMethodsSearchCriteria, PaymentMethodsSearchResult, PaymentMethod, StorePaymentMethodEntity>, IPaymentMethodsSearchService
     {
         private readonly ISettingsManager _settingsManager;
+        private readonly IEventPublisher _eventPublisher;
 
         public PaymentMethodsSearchService(Func<IPaymentRepository> repositoryFactory, IPlatformMemoryCache platformMemoryCache,
-            IPaymentMethodsService paymentMethodsService, ISettingsManager settingsManager)
+            IPaymentMethodsService paymentMethodsService, ISettingsManager settingsManager, IEventPublisher eventPublisher)
            : base(repositoryFactory, platformMemoryCache, (ICrudService<PaymentMethod>)paymentMethodsService)
         {
             _settingsManager = settingsManager;
+            _eventPublisher = eventPublisher;
         }
 
         protected override IQueryable<StorePaymentMethodEntity> BuildQuery(IRepository repository, PaymentMethodsSearchCriteria criteria)
@@ -67,7 +71,11 @@ namespace VirtoCommerce.PaymentModule.Data.Services
             return sortInfos;
         }
 
-        protected override async Task<PaymentMethodsSearchResult> ProcessSearchResultAsync(PaymentMethodsSearchResult result, PaymentMethodsSearchCriteria criteria) {
+        protected override async Task<PaymentMethodsSearchResult> ProcessSearchResultAsync(PaymentMethodsSearchResult result, PaymentMethodsSearchCriteria criteria)
+        {
+            // throw this event in case there're modules than need some special work done before instancing payment methods (NativePaymentMethods for example)
+            await _eventPublisher.Publish(new PaymentMethodInstancingEvent());
+
             var tmpSkip = Math.Min(result.TotalCount, criteria.Skip);
             var tmpTake = Math.Min(criteria.Take, Math.Max(0, result.TotalCount - criteria.Skip));
             criteria.Skip -= tmpSkip;

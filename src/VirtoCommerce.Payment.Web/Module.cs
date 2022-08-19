@@ -2,9 +2,11 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using VirtoCommerce.PaymentModule.Core;
 using VirtoCommerce.PaymentModule.Core.Model;
 using VirtoCommerce.PaymentModule.Core.Model.Search;
@@ -13,6 +15,7 @@ using VirtoCommerce.PaymentModule.Data;
 using VirtoCommerce.PaymentModule.Data.ExportImport;
 using VirtoCommerce.PaymentModule.Data.Repositories;
 using VirtoCommerce.PaymentModule.Data.Services;
+using VirtoCommerce.PaymentModule.Web.JsonConverters;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.ExportImport;
 using VirtoCommerce.Platform.Core.GenericCrud;
@@ -44,6 +47,7 @@ namespace VirtoCommerce.PaymentModule.Web
             serviceCollection.AddTransient(x => (IPaymentMethodsService)x.GetRequiredService<ICrudService<PaymentMethod>>());
             serviceCollection.AddTransient<IPaymentMethodsRegistrar, PaymentMethodsService>();
             serviceCollection.AddTransient<PaymentExportImport>();
+            serviceCollection.AddTransient<PaymentMethodsJsonConverter>();
         }
 
         public void PostInitialize(IApplicationBuilder appBuilder)
@@ -66,6 +70,9 @@ namespace VirtoCommerce.PaymentModule.Web
                 dbContext.Database.EnsureCreated();
                 dbContext.Database.Migrate();
             }
+
+            var mvcJsonOptions = appBuilder.ApplicationServices.GetService<IOptions<MvcNewtonsoftJsonOptions>>();
+            mvcJsonOptions.Value.SerializerSettings.Converters.Add(appBuilder.ApplicationServices.GetService<PaymentMethodsJsonConverter>());
         }
 
         public void Uninstall()

@@ -1,17 +1,17 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
-using VirtoCommerce.PaymentModule.Core.Model;
 using VirtoCommerce.PaymentModule.Core.Events;
+using VirtoCommerce.PaymentModule.Core.Model;
 using VirtoCommerce.PaymentModule.Core.Services;
 using VirtoCommerce.PaymentModule.Data.Model;
 using VirtoCommerce.PaymentModule.Data.Repositories;
 using VirtoCommerce.Platform.Core.Caching;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.Events;
-using VirtoCommerce.Platform.Data.GenericCrud;
-using System.Linq;
 using VirtoCommerce.Platform.Core.Settings;
+using VirtoCommerce.Platform.Data.GenericCrud;
 
 namespace VirtoCommerce.PaymentModule.Data.Services
 {
@@ -55,6 +55,12 @@ namespace VirtoCommerce.PaymentModule.Data.Services
 
         protected override PaymentMethod ProcessModel(string responseGroup, StorePaymentMethodEntity entity, PaymentMethod model)
         {
+            // throw this event in case there're modules than need some special work done before instancing a payment method (NativePaymentMethods for example)
+            _eventPublisher.Publish(new PaymentMethodInstancingEvent
+            {
+                PaymentMethodCodes = new List<string> { entity.Code }
+            }).GetAwaiter().GetResult();
+
             var paymentMethod = AbstractTypeFactory<PaymentMethod>.TryCreateInstance(string.IsNullOrEmpty(entity.TypeName) ? entity.Code : entity.TypeName);
             if (paymentMethod != null)
             {
