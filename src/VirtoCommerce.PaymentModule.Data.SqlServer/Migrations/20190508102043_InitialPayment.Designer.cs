@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using VirtoCommerce.PaymentModule.Data.Repositories;
 
-namespace VirtoCommerce.PaymentModule.Data.Migrations
+namespace VirtoCommerce.PaymentModule.Data.SqlServer.Migrations
 {
     [DbContext(typeof(PaymentDbContext))]
-    [Migration("20000000000000_UpdatePaymentV2")]
-    partial class UpdatePaymentV2
+    [Migration("20190508102043_InitialPayment")]
+    partial class InitialPayment
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {

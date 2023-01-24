@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace VirtoCommerce.PaymentModule.Data.Migrations
+namespace VirtoCommerce.PaymentModule.Data.SqlServer.Migrations
 {
     public partial class InitialPayment : Migration
     {
