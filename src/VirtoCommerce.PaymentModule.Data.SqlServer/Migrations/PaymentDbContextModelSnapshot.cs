@@ -2,16 +2,14 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Migrations;
 using VirtoCommerce.PaymentModule.Data.Repositories;
 
-namespace VirtoCommerce.PaymentModule.Data.Migrations
+namespace VirtoCommerce.PaymentModule.Data.SqlServer.Migrations
 {
     [DbContext(typeof(PaymentDbContext))]
-    [Migration("20190508102043_InitialPayment")]
-    partial class InitialPayment
+    partial class PaymentDbContextModelSnapshot : ModelSnapshot
     {
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
