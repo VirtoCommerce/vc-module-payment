@@ -1,3 +1,4 @@
+using System.Reflection;
 using EntityFrameworkCore.Triggers;
 using Microsoft.EntityFrameworkCore;
 using VirtoCommerce.PaymentModule.Data.Model;
@@ -25,6 +26,25 @@ namespace VirtoCommerce.PaymentModule.Data.Repositories
             modelBuilder.Entity<StorePaymentMethodEntity>().HasIndex(x => new { x.TypeName, x.StoreId })
                 .HasDatabaseName("IX_StorePaymentMethodEntity_TypeName_StoreId")
                 .IsUnique();
+
+            base.OnModelCreating(modelBuilder);
+
+
+            // Allows configuration for an entity type for different database types.
+            // Applies configuration from all <see cref="IEntityTypeConfiguration{TEntity}" in VirtoCommerce.PaymentModule.Data.XXX project. /> 
+            switch (this.Database.ProviderName)
+            {
+                case "Pomelo.EntityFrameworkCore.MySql":
+                    modelBuilder.ApplyConfigurationsFromAssembly(Assembly.Load("VirtoCommerce.PaymentModule.Data.MySql"));
+                    break;
+                case "Npgsql.EntityFrameworkCore.PostgreSQL":
+                    modelBuilder.ApplyConfigurationsFromAssembly(Assembly.Load("VirtoCommerce.PaymentModule.Data.PostgreSql"));
+                    break;
+                case "Microsoft.EntityFrameworkCore.SqlServer":
+                    modelBuilder.ApplyConfigurationsFromAssembly(Assembly.Load("VirtoCommerce.PaymentModule.Data.SqlServer"));
+                    break;
+            }
+
         }
     }
 }

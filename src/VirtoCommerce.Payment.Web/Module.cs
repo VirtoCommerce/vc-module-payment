@@ -13,8 +13,11 @@ using VirtoCommerce.PaymentModule.Core.Model.Search;
 using VirtoCommerce.PaymentModule.Core.Services;
 using VirtoCommerce.PaymentModule.Data;
 using VirtoCommerce.PaymentModule.Data.ExportImport;
+using VirtoCommerce.PaymentModule.Data.MySql;
+using VirtoCommerce.PaymentModule.Data.PostgreSql;
 using VirtoCommerce.PaymentModule.Data.Repositories;
 using VirtoCommerce.PaymentModule.Data.Services;
+using VirtoCommerce.PaymentModule.Data.SqlServer;
 using VirtoCommerce.PaymentModule.Web.JsonConverters;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.ExportImport;
@@ -26,18 +29,33 @@ using VirtoCommerce.Platform.Data.Extensions;
 
 namespace VirtoCommerce.PaymentModule.Web
 {
-    public class Module : IModule, IExportSupport, IImportSupport
+    public class Module : IModule, IExportSupport, IImportSupport, IHasConfiguration
     {
         public ManifestModuleInfo ModuleInfo { get; set; }
         private IApplicationBuilder _appBuilder;
+        public IConfiguration Configuration { get; set; }
 
         public void Initialize(IServiceCollection serviceCollection)
         {
             serviceCollection.AddDbContext<PaymentDbContext>((provider, options) =>
             {
-                var configuration = provider.GetRequiredService<IConfiguration>();
-                options.UseSqlServer(configuration.GetConnectionString(ModuleInfo.Id) ?? configuration.GetConnectionString("VirtoCommerce"));
+                var databaseProvider = Configuration.GetValue("DatabaseProvider", "SqlServer");
+                var connectionString = Configuration.GetConnectionString(ModuleInfo.Id) ?? Configuration.GetConnectionString("VirtoCommerce");
+
+                switch (databaseProvider)
+                {
+                    case "MySql":
+                        options.UseMySqlDatabase(connectionString);
+                        break;
+                    case "PostgreSql":
+                        options.UsePostgreSqlDatabase(connectionString);
+                        break;
+                    default:
+                        options.UseSqlServerDatabase(connectionString);
+                        break;
+                }
             });
+
 
             serviceCollection.AddTransient<IPaymentRepository, PaymentRepository>();
             serviceCollection.AddTransient<Func<IPaymentRepository>>(provider => () => provider.CreateScope().ServiceProvider.GetService<IPaymentRepository>());
@@ -65,9 +83,13 @@ namespace VirtoCommerce.PaymentModule.Web
 
             using (var serviceScope = appBuilder.ApplicationServices.CreateScope())
             {
+                var databaseProvider = Configuration.GetValue("DatabaseProvider", "SqlServer");
+
                 var dbContext = serviceScope.ServiceProvider.GetRequiredService<PaymentDbContext>();
-                dbContext.Database.MigrateIfNotApplied(MigrationName.GetUpdateV2MigrationName(ModuleInfo.Id));
-                dbContext.Database.EnsureCreated();
+                if (databaseProvider == "SqlServer")
+                {
+                    dbContext.Database.MigrateIfNotApplied(MigrationName.GetUpdateV2MigrationName(ModuleInfo.Id));
+                }
                 dbContext.Database.Migrate();
             }
 
