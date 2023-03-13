@@ -4,7 +4,7 @@ using VirtoCommerce.PaymentModule.Model.Requests;
 
 namespace VirtoCommerce.PaymentModule.Data
 {
-    public class DefaultManualPaymentMethod : PaymentMethod
+    public class DefaultManualPaymentMethod : PaymentMethod, ISupportCaptureFlow, ISupportRefundFlow
     {
         public DefaultManualPaymentMethod() : base("DefaultManualPaymentMethod")
         {
@@ -52,7 +52,7 @@ namespace VirtoCommerce.PaymentModule.Data
 
         public override RefundPaymentRequestResult RefundProcessPayment(RefundPaymentRequest request)
         {
-            throw new NotImplementedException();
+            return new RefundPaymentRequestResult { IsSuccess = true, NewRefundStatus = RefundStatus.Processed };
         }
 
         public override ValidatePostProcessRequestResult ValidatePostProcessRequest(System.Collections.Specialized.NameValueCollection queryString)
