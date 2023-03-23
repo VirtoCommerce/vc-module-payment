@@ -11,5 +11,9 @@ namespace VirtoCommerce.PaymentModule.Model.Requests
         /// Gets or sets a value indicating whether it's a partial refund; otherwise, full refund
         /// </summary>
         public bool IsPartialRefund { get; set; }
+
+        public string Notes { get; set; }
+
+        public string Reason { get; set; }
     }
 }
