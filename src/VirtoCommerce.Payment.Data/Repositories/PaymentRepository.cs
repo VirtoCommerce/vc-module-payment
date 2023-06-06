@@ -9,16 +9,18 @@ namespace VirtoCommerce.PaymentModule.Data.Repositories
 {
     public class PaymentRepository : DbContextRepositoryBase<PaymentDbContext>, IPaymentRepository
     {
-        public PaymentRepository(PaymentDbContext dbContext) : base(dbContext)
+        public PaymentRepository(PaymentDbContext dbContext)
+            : base(dbContext)
         {
         }
 
         public IQueryable<StorePaymentMethodEntity> PaymentMethods => DbContext.Set<StorePaymentMethodEntity>();
 
-        public async Task<IEnumerable<StorePaymentMethodEntity>> GetByIdsAsync(IEnumerable<string> ids, string responseGroup = null)
+        public async Task<IList<StorePaymentMethodEntity>> GetByIdsAsync(IList<string> ids, string responseGroup = null)
         {
-            return await PaymentMethods.Where(x => ids.Contains(x.Id))
-                                            .ToArrayAsync();
+            return await PaymentMethods
+                .Where(x => ids.Contains(x.Id))
+                .ToListAsync();
         }
     }
 }
