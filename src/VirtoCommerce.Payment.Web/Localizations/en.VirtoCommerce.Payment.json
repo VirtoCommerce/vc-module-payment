@@ -6,11 +6,12 @@
         "labels": {
           "is-active": "Is active",
           "is-partial-payments-available": "Is partial payments available",
+          "allow-deferred-payment": "Allow the order to go to processing without payment being received",
           "name": "Name",
           "code": "Code",
           "description": "Description",
           "settings": "Settings",
-          "logoUrl":  "Logo Url" 
+          "logoUrl": "Logo Url"
         },
         "placeholders": {
           "description": "Enter description"

@@ -9,7 +9,7 @@ namespace VirtoCommerce.PaymentModule.Data.SqlServer
         public PaymentDbContext CreateDbContext(string[] args)
         {
             var builder = new DbContextOptionsBuilder<PaymentDbContext>();
-            var connectionString = args.Any() ? args[0] : "Data Source=(local);Initial Catalog=VirtoCommerce3;Persist Security Info=True;User ID=virto;Password=virto;MultipleActiveResultSets=True;Connect Timeout=30";
+            var connectionString = args.Any() ? args[0] : "Data Source=(local);Initial Catalog=VirtoCommerce3target60;Trusted_Connection=True;MultipleActiveResultSets=True;Connect Timeout=30";
 
             builder.UseSqlServer(
                 connectionString,

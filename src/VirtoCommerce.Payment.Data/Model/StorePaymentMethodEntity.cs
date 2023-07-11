@@ -21,6 +21,8 @@ namespace VirtoCommerce.PaymentModule.Data.Model
 
         public bool IsAvailableForPartial { get; set; }
 
+        public bool AllowDeferredPayment { get; set; }
+
         public string TypeName { get; set; }
 
         public string StoreId { get; set; }
@@ -36,6 +38,7 @@ namespace VirtoCommerce.PaymentModule.Data.Model
             paymentMethod.IsActive = IsActive;
             paymentMethod.Code = Code;
             paymentMethod.IsAvailableForPartial = IsAvailableForPartial;
+            paymentMethod.AllowDeferredPayment = AllowDeferredPayment;
             paymentMethod.LogoUrl = LogoUrl;
             paymentMethod.Priority = Priority;
             paymentMethod.StoreId = StoreId;
@@ -55,6 +58,7 @@ namespace VirtoCommerce.PaymentModule.Data.Model
             IsActive = paymentMethod.IsActive;
             Code = paymentMethod.Code;
             IsAvailableForPartial = paymentMethod.IsAvailableForPartial;
+            AllowDeferredPayment = paymentMethod.AllowDeferredPayment;
             LogoUrl = paymentMethod.LogoUrl;
             Priority = paymentMethod.Priority;
             StoreId = paymentMethod.StoreId;
@@ -72,6 +76,7 @@ namespace VirtoCommerce.PaymentModule.Data.Model
             target.IsActive = IsActive;
             target.Code = Code;
             target.IsAvailableForPartial = IsAvailableForPartial;
+            target.AllowDeferredPayment = AllowDeferredPayment;
             target.LogoUrl = LogoUrl;
             target.Priority = Priority;
             target.StoreId = StoreId;
