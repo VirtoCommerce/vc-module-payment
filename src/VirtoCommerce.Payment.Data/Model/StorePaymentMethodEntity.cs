@@ -32,7 +32,9 @@ namespace VirtoCommerce.PaymentModule.Data.Model
         public virtual PaymentMethod ToModel(PaymentMethod paymentMethod)
         {
             if (paymentMethod == null)
+            {
                 throw new ArgumentNullException(nameof(paymentMethod));
+            }
 
             paymentMethod.Id = Id;
             paymentMethod.IsActive = IsActive;
@@ -50,7 +52,9 @@ namespace VirtoCommerce.PaymentModule.Data.Model
         public virtual StorePaymentMethodEntity FromModel(PaymentMethod paymentMethod, PrimaryKeyResolvingMap pkMap)
         {
             if (paymentMethod == null)
+            {
                 throw new ArgumentNullException(nameof(paymentMethod));
+            }
 
             pkMap.AddPair(paymentMethod, this);
 
@@ -71,7 +75,9 @@ namespace VirtoCommerce.PaymentModule.Data.Model
         public virtual void Patch(StorePaymentMethodEntity target)
         {
             if (target == null)
+            {
                 throw new ArgumentNullException(nameof(target));
+            }
 
             target.IsActive = IsActive;
             target.Code = Code;

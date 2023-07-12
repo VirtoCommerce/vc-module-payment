@@ -25,6 +25,9 @@ namespace VirtoCommerce.PaymentModule.Data.MySql.Migrations
                         .HasMaxLength(128)
                         .HasColumnType("varchar(128)");
 
+                    b.Property<bool>("AllowDeferredPayment")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(128)
