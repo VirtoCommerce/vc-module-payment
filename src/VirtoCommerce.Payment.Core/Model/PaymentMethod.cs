@@ -28,6 +28,11 @@ namespace VirtoCommerce.PaymentModule.Core.Model
 
         public bool IsAvailableForPartial { get; set; }
 
+        /// <summary>
+        /// Allow the order to go to processing without payment being received
+        /// </summary>
+        public bool AllowDeferredPayment { get; set; }
+
         public string Currency { get; set; }
 
         public virtual decimal Price { get; set; }
