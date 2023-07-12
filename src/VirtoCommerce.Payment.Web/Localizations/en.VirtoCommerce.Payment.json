@@ -6,7 +6,7 @@
         "labels": {
           "is-active": "Is active",
           "is-partial-payments-available": "Is partial payments available",
-          "allow-deferred-payment": "Allow the order to go to processing without payment being received",
+          "allow-deferred-payment": "Apply status for terminated payment",
           "name": "Name",
           "code": "Code",
           "description": "Description",
