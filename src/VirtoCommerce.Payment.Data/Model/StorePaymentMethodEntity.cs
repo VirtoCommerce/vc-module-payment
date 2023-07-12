@@ -21,6 +21,8 @@ namespace VirtoCommerce.PaymentModule.Data.Model
 
         public bool IsAvailableForPartial { get; set; }
 
+        public bool AllowDeferredPayment { get; set; }
+
         public string TypeName { get; set; }
 
         public string StoreId { get; set; }
@@ -30,12 +32,15 @@ namespace VirtoCommerce.PaymentModule.Data.Model
         public virtual PaymentMethod ToModel(PaymentMethod paymentMethod)
         {
             if (paymentMethod == null)
+            {
                 throw new ArgumentNullException(nameof(paymentMethod));
+            }
 
             paymentMethod.Id = Id;
             paymentMethod.IsActive = IsActive;
             paymentMethod.Code = Code;
             paymentMethod.IsAvailableForPartial = IsAvailableForPartial;
+            paymentMethod.AllowDeferredPayment = AllowDeferredPayment;
             paymentMethod.LogoUrl = LogoUrl;
             paymentMethod.Priority = Priority;
             paymentMethod.StoreId = StoreId;
@@ -47,7 +52,9 @@ namespace VirtoCommerce.PaymentModule.Data.Model
         public virtual StorePaymentMethodEntity FromModel(PaymentMethod paymentMethod, PrimaryKeyResolvingMap pkMap)
         {
             if (paymentMethod == null)
+            {
                 throw new ArgumentNullException(nameof(paymentMethod));
+            }
 
             pkMap.AddPair(paymentMethod, this);
 
@@ -55,6 +62,7 @@ namespace VirtoCommerce.PaymentModule.Data.Model
             IsActive = paymentMethod.IsActive;
             Code = paymentMethod.Code;
             IsAvailableForPartial = paymentMethod.IsAvailableForPartial;
+            AllowDeferredPayment = paymentMethod.AllowDeferredPayment;
             LogoUrl = paymentMethod.LogoUrl;
             Priority = paymentMethod.Priority;
             StoreId = paymentMethod.StoreId;
@@ -67,11 +75,14 @@ namespace VirtoCommerce.PaymentModule.Data.Model
         public virtual void Patch(StorePaymentMethodEntity target)
         {
             if (target == null)
+            {
                 throw new ArgumentNullException(nameof(target));
+            }
 
             target.IsActive = IsActive;
             target.Code = Code;
             target.IsAvailableForPartial = IsAvailableForPartial;
+            target.AllowDeferredPayment = AllowDeferredPayment;
             target.LogoUrl = LogoUrl;
             target.Priority = Priority;
             target.StoreId = StoreId;

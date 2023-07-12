@@ -45,6 +45,19 @@
                         </div>
                     </div>
                 </div>
+                <div class="form-group clearfix">
+                    <div class="column">
+                        <div class="form-group __info list">
+                            <label class="form-label">{{ 'payment.blades.payment-method-detail.labels.allow-deferred-payment' | translate }}</label>
+                            <div class="form-input">
+                                <label class="form-label __switch">
+                                    <input type="checkbox" ng-model="blade.currentEntity.allowDeferredPayment" />
+                                    <span class="switch"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="form-group __info list">
                     <div class="column">
                         <label class="form-label">{{ 'payment.blades.payment-method-detail.labels.logoUrl' | translate }}</label>
