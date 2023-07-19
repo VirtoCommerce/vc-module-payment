@@ -9,7 +9,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using VirtoCommerce.PaymentModule.Core;
 using VirtoCommerce.PaymentModule.Core.Model;
-using VirtoCommerce.PaymentModule.Core.Model.Search;
 using VirtoCommerce.PaymentModule.Core.Services;
 using VirtoCommerce.PaymentModule.Data;
 using VirtoCommerce.PaymentModule.Data.ExportImport;
@@ -21,7 +20,6 @@ using VirtoCommerce.PaymentModule.Data.SqlServer;
 using VirtoCommerce.PaymentModule.Web.JsonConverters;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.ExportImport;
-using VirtoCommerce.Platform.Core.GenericCrud;
 using VirtoCommerce.Platform.Core.JsonConverters;
 using VirtoCommerce.Platform.Core.Modularity;
 using VirtoCommerce.Platform.Core.Settings;
@@ -32,12 +30,13 @@ namespace VirtoCommerce.PaymentModule.Web
     public class Module : IModule, IExportSupport, IImportSupport, IHasConfiguration
     {
         public ManifestModuleInfo ModuleInfo { get; set; }
-        private IApplicationBuilder _appBuilder;
         public IConfiguration Configuration { get; set; }
+
+        private IApplicationBuilder _appBuilder;
 
         public void Initialize(IServiceCollection serviceCollection)
         {
-            serviceCollection.AddDbContext<PaymentDbContext>((provider, options) =>
+            serviceCollection.AddDbContext<PaymentDbContext>(options =>
             {
                 var databaseProvider = Configuration.GetValue("DatabaseProvider", "SqlServer");
                 var connectionString = Configuration.GetConnectionString(ModuleInfo.Id) ?? Configuration.GetConnectionString("VirtoCommerce");
@@ -56,13 +55,10 @@ namespace VirtoCommerce.PaymentModule.Web
                 }
             });
 
-
             serviceCollection.AddTransient<IPaymentRepository, PaymentRepository>();
             serviceCollection.AddTransient<Func<IPaymentRepository>>(provider => () => provider.CreateScope().ServiceProvider.GetService<IPaymentRepository>());
-            serviceCollection.AddTransient<ISearchService<PaymentMethodsSearchCriteria, PaymentMethodsSearchResult, PaymentMethod>, PaymentMethodsSearchService>();
-            serviceCollection.AddTransient(x => (IPaymentMethodsSearchService)x.GetRequiredService<ISearchService<PaymentMethodsSearchCriteria, PaymentMethodsSearchResult, PaymentMethod>>());
-            serviceCollection.AddTransient<ICrudService<PaymentMethod>, PaymentMethodsService>();
-            serviceCollection.AddTransient(x => (IPaymentMethodsService)x.GetRequiredService<ICrudService<PaymentMethod>>());
+            serviceCollection.AddTransient<IPaymentMethodsSearchService, PaymentMethodsSearchService>();
+            serviceCollection.AddTransient<IPaymentMethodsService, PaymentMethodsService>();
             serviceCollection.AddTransient<IPaymentMethodsRegistrar, PaymentMethodsService>();
             serviceCollection.AddTransient<PaymentExportImport>();
             serviceCollection.AddTransient<PaymentMethodsJsonConverter>();
@@ -77,7 +73,7 @@ namespace VirtoCommerce.PaymentModule.Web
 
             var paymentMethodsRegistrar = appBuilder.ApplicationServices.GetRequiredService<IPaymentMethodsRegistrar>();
             paymentMethodsRegistrar.RegisterPaymentMethod<DefaultManualPaymentMethod>();
-            settingsRegistrar.RegisterSettingsForType(ModuleConstants.Settings.DefaultManualPaymentMethod.AllSettings, typeof(DefaultManualPaymentMethod).Name);
+            settingsRegistrar.RegisterSettingsForType(ModuleConstants.Settings.DefaultManualPaymentMethod.AllSettings, nameof(DefaultManualPaymentMethod));
 
             PolymorphJsonConverter.RegisterTypeForDiscriminator(typeof(PaymentMethod), nameof(PaymentMethod.TypeName));
 

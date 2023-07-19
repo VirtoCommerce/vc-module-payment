@@ -1,12 +1,10 @@
-using System;
-using System.Threading.Tasks;
+using VirtoCommerce.PaymentModule.Core.Model;
 using VirtoCommerce.PaymentModule.Core.Model.Search;
+using VirtoCommerce.Platform.Core.GenericCrud;
 
 namespace VirtoCommerce.PaymentModule.Core.Services
 {
-    public interface IPaymentMethodsSearchService
+    public interface IPaymentMethodsSearchService : ISearchService<PaymentMethodsSearchCriteria, PaymentMethodsSearchResult, PaymentMethod>
     {
-        [Obsolete(@"Need to remove after inheriting IPaymentMethodsSearchService from ISearchService<PaymentMethodsSearchCriteria, PaymentMethodsSearchResult, PaymentMethod>.")]
-        Task<PaymentMethodsSearchResult> SearchPaymentMethodsAsync(PaymentMethodsSearchCriteria criteria);
     }
 }

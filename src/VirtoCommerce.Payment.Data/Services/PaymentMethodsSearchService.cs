@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
 using VirtoCommerce.PaymentModule.Core.Events;
 using VirtoCommerce.PaymentModule.Core.Model;
 using VirtoCommerce.PaymentModule.Core.Model.Search;
@@ -22,9 +23,14 @@ namespace VirtoCommerce.PaymentModule.Data.Services
         private readonly ISettingsManager _settingsManager;
         private readonly IEventPublisher _eventPublisher;
 
-        public PaymentMethodsSearchService(Func<IPaymentRepository> repositoryFactory, IPlatformMemoryCache platformMemoryCache,
-            IPaymentMethodsService paymentMethodsService, ISettingsManager settingsManager, IEventPublisher eventPublisher)
-           : base(repositoryFactory, platformMemoryCache, (ICrudService<PaymentMethod>)paymentMethodsService)
+        public PaymentMethodsSearchService(
+            Func<IPaymentRepository> repositoryFactory,
+            IPlatformMemoryCache platformMemoryCache,
+            IPaymentMethodsService crudService,
+            IOptions<CrudOptions> crudOptions,
+            ISettingsManager settingsManager,
+            IEventPublisher eventPublisher)
+           : base(repositoryFactory, platformMemoryCache, crudService, crudOptions)
         {
             _settingsManager = settingsManager;
             _eventPublisher = eventPublisher;
@@ -60,6 +66,7 @@ namespace VirtoCommerce.PaymentModule.Data.Services
         protected override IList<SortInfo> BuildSortExpression(PaymentMethodsSearchCriteria criteria)
         {
             var sortInfos = criteria.SortInfos;
+
             if (sortInfos.IsNullOrEmpty())
             {
                 sortInfos = new[]
@@ -73,17 +80,20 @@ namespace VirtoCommerce.PaymentModule.Data.Services
 
         protected override async Task<PaymentMethodsSearchResult> ProcessSearchResultAsync(PaymentMethodsSearchResult result, PaymentMethodsSearchCriteria criteria)
         {
-            // throw this event in case there're modules than need some special work done before instancing payment methods (NativePaymentMethods for example)
+            // throw this event in case there are modules than need some special work done before instancing payment methods (NativePaymentMethods for example)
             await _eventPublisher.Publish(new PaymentMethodInstancingEvent());
 
             var tmpSkip = Math.Min(result.TotalCount, criteria.Skip);
             var tmpTake = Math.Min(criteria.Take, Math.Max(0, result.TotalCount - criteria.Skip));
             criteria.Skip -= tmpSkip;
             criteria.Take -= tmpTake;
+
             if (criteria.Take > 0 && !criteria.WithoutTransient)
             {
-                var transientMethodsQuery = AbstractTypeFactory<PaymentMethod>.AllTypeInfos.Select(x => AbstractTypeFactory<PaymentMethod>.TryCreateInstance(x.Type.Name))
-                                                                              .OfType<PaymentMethod>().AsQueryable();
+                var transientMethodsQuery = AbstractTypeFactory<PaymentMethod>.AllTypeInfos
+                    .Select(x => AbstractTypeFactory<PaymentMethod>.TryCreateInstance(x.Type.Name))
+                    .AsQueryable();
+
                 if (!string.IsNullOrEmpty(criteria.Keyword))
                 {
                     transientMethodsQuery = transientMethodsQuery.Where(x => x.Code.Contains(criteria.Keyword));
@@ -93,6 +103,7 @@ namespace VirtoCommerce.PaymentModule.Data.Services
                 {
                     transientMethodsQuery = transientMethodsQuery.Where(x => x.IsActive == criteria.IsActive.Value);
                 }
+
                 var allPersistentTypes = result.Results.Select(x => x.GetType()).Distinct();
                 transientMethodsQuery = transientMethodsQuery.Where(x => !allPersistentTypes.Contains(x.GetType()));
 
@@ -110,12 +121,5 @@ namespace VirtoCommerce.PaymentModule.Data.Services
 
             return result;
         }
-
-        #region IPaymentMethodsSearchService compatibility
-        public Task<PaymentMethodsSearchResult> SearchPaymentMethodsAsync(PaymentMethodsSearchCriteria criteria)
-        {
-            return SearchAsync(criteria);
-        }
-        #endregion
     }
 }
