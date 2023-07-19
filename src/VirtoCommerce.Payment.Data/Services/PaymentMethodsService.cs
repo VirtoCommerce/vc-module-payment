@@ -15,18 +15,24 @@ using VirtoCommerce.Platform.Data.GenericCrud;
 
 namespace VirtoCommerce.PaymentModule.Data.Services
 {
-
     public class PaymentMethodsService : CrudService<PaymentMethod, StorePaymentMethodEntity, PaymentMethodChangeEvent, PaymentMethodChangedEvent>, IPaymentMethodsService, IPaymentMethodsRegistrar
     {
+        private readonly IEventPublisher _eventPublisher;
         private readonly ISettingsManager _settingManager;
 
-        public PaymentMethodsService(Func<IPaymentRepository> repositoryFactory, IPlatformMemoryCache platformMemoryCache, IEventPublisher eventPublisher, ISettingsManager settingManager)
+        public PaymentMethodsService(
+            Func<IPaymentRepository> repositoryFactory,
+            IPlatformMemoryCache platformMemoryCache,
+            IEventPublisher eventPublisher,
+            ISettingsManager settingManager)
             : base(repositoryFactory, platformMemoryCache, eventPublisher)
         {
+            _eventPublisher = eventPublisher;
             _settingManager = settingManager;
         }
 
-        public void RegisterPaymentMethod<T>(Func<T> factory = null) where T : PaymentMethod
+        public void RegisterPaymentMethod<T>(Func<T> factory = null)
+            where T : PaymentMethod
         {
             if (AbstractTypeFactory<PaymentMethod>.AllTypeInfos.All(t => t.Type != typeof(T)))
             {
@@ -40,22 +46,22 @@ namespace VirtoCommerce.PaymentModule.Data.Services
 
         public Task<PaymentMethod[]> GetRegisteredPaymentMethods()
         {
-            var result = Task.FromResult(
-                AbstractTypeFactory<PaymentMethod>.AllTypeInfos
+            var result = AbstractTypeFactory<PaymentMethod>.AllTypeInfos
                 .Select(x => AbstractTypeFactory<PaymentMethod>.TryCreateInstance(x.Type.Name))
-                .ToArray());
-            return result;
+                .ToArray();
+
+            return Task.FromResult(result);
         }
 
 
-        protected override Task<IEnumerable<StorePaymentMethodEntity>> LoadEntities(IRepository repository, IEnumerable<string> ids, string responseGroup)
+        protected override Task<IList<StorePaymentMethodEntity>> LoadEntities(IRepository repository, IList<string> ids, string responseGroup)
         {
             return ((IPaymentRepository)repository).GetByIdsAsync(ids, responseGroup);
         }
 
         protected override PaymentMethod ProcessModel(string responseGroup, StorePaymentMethodEntity entity, PaymentMethod model)
         {
-            // throw this event in case there're modules than need some special work done before instancing a payment method (NativePaymentMethods for example)
+            // throw this event in case there are modules than need some special work done before instancing a payment method (NativePaymentMethods for example)
             _eventPublisher.Publish(new PaymentMethodInstancingEvent
             {
                 PaymentMethodCodes = new List<string> { entity.Code }
@@ -68,35 +74,18 @@ namespace VirtoCommerce.PaymentModule.Data.Services
                 _settingManager.DeepLoadSettingsAsync(paymentMethod).GetAwaiter().GetResult();
                 return paymentMethod;
             }
+
             return null;
         }
 
-        protected override Task AfterSaveChangesAsync(IEnumerable<PaymentMethod> models, IEnumerable<GenericChangedEntry<PaymentMethod>> changedEntries)
+        protected override Task AfterSaveChangesAsync(IList<PaymentMethod> models, IList<GenericChangedEntry<PaymentMethod>> changedEntries)
         {
             return _settingManager.DeepSaveSettingsAsync(models);
         }
 
-        protected override Task AfterDeleteAsync(IEnumerable<PaymentMethod> models, IEnumerable<GenericChangedEntry<PaymentMethod>> changedEntries)
+        protected override Task AfterDeleteAsync(IList<PaymentMethod> models, IList<GenericChangedEntry<PaymentMethod>> changedEntries)
         {
             return _settingManager.DeepRemoveSettingsAsync(models);
         }
-
-
-        #region IPaymentMethodsService compatibility
-        public async Task<PaymentMethod[]> GetByIdsAsync(string[] ids, string responseGroup)
-        {
-            return (await GetByIdsAsync((IEnumerable<string>)ids, responseGroup)).ToArray();
-        }
-
-        public Task SaveChangesAsync(PaymentMethod[] paymentMethods)
-        {
-            return SaveChangesAsync((IEnumerable<PaymentMethod>)paymentMethods);
-        }
-
-        public Task DeleteAsync(string[] ids)
-        {
-            return DeleteAsync((IEnumerable<string>)ids);
-        }
-        #endregion
     }
 }
