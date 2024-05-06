@@ -87,5 +87,10 @@ namespace VirtoCommerce.PaymentModule.Data.Services
         {
             return _settingManager.DeepRemoveSettingsAsync(models);
         }
+
+        protected override PaymentMethod ToModel(StorePaymentMethodEntity entity)
+        {
+            return entity.ToModel(AbstractTypeFactory<PaymentMethod>.TryCreateInstance(entity.TypeName));
+        }
     }
 }
