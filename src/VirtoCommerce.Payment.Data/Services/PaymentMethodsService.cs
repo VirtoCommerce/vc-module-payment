@@ -61,21 +61,8 @@ namespace VirtoCommerce.PaymentModule.Data.Services
 
         protected override PaymentMethod ProcessModel(string responseGroup, StorePaymentMethodEntity entity, PaymentMethod model)
         {
-            // throw this event in case there are modules than need some special work done before instancing a payment method (NativePaymentMethods for example)
-            _eventPublisher.Publish(new PaymentMethodInstancingEvent
-            {
-                PaymentMethodCodes = new List<string> { entity.Code }
-            }).GetAwaiter().GetResult();
-
-            var paymentMethod = AbstractTypeFactory<PaymentMethod>.TryCreateInstance(string.IsNullOrEmpty(entity.TypeName) ? entity.Code : entity.TypeName);
-            if (paymentMethod != null)
-            {
-                entity.ToModel(paymentMethod);
-                _settingManager.DeepLoadSettingsAsync(paymentMethod).GetAwaiter().GetResult();
-                return paymentMethod;
-            }
-
-            return null;
+            _settingManager.DeepLoadSettingsAsync(model).GetAwaiter().GetResult();
+            return model;
         }
 
         protected override Task AfterSaveChangesAsync(IList<PaymentMethod> models, IList<GenericChangedEntry<PaymentMethod>> changedEntries)
@@ -86,6 +73,17 @@ namespace VirtoCommerce.PaymentModule.Data.Services
         protected override Task AfterDeleteAsync(IList<PaymentMethod> models, IList<GenericChangedEntry<PaymentMethod>> changedEntries)
         {
             return _settingManager.DeepRemoveSettingsAsync(models);
+        }
+
+        protected override PaymentMethod ToModel(StorePaymentMethodEntity entity)
+        {
+            // Publish this event in case there are modules that need some special work done before instancing a payment method.
+            // For example, NativePaymentMethods registers its payment methods.
+            _eventPublisher.Publish(new PaymentMethodInstancingEvent { PaymentMethodCodes = [entity.Code] }).GetAwaiter().GetResult();
+
+            var typeName = entity.TypeName?.EmptyToNull() ?? entity.Code;
+            var model = AbstractTypeFactory<PaymentMethod>.TryCreateInstance(typeName);
+            return entity.ToModel(model);
         }
     }
 }
