@@ -1,57 +1,64 @@
 {
-    "payment": {
-        "blades": {
-            "payment-method-detail": {
-                "subtitle": "Zahlungsmethode bearbeiten",
-                "labels": {
-                    "is-active": "Ist aktiv",
-                    "is-partial-payments-available": "Teilweiser Zahlungen verfügbar",
-                    "name": "Name",
-                    "code": "Code",
-                    "description": "Beschreibung",
-                    "settings": "Einstellungen"
-                },
-                "placeholders": {
-                    "description": "Beschreibung eingeben"
-                }
-            },
-            "payment-method-list": {
-                "subtitle": "Zahlungsmethode bearbeiten",
-                "labels": {
-                    "is-active": "Ist aktiv",
-                    "payment-method": "Zahlungsmethode",
-                    "note": "Legen Sie den Auftrag fest, wie Zahlungsmethoden im Web Store sortiert werden. Ziehen und loslassen, um die Reihenfolge zu ändern."
-                },
-                "placeholders": {
-                    "description": "Beschreibung eingeben"
-                }
-            }
-        },
-        "dialogs": {
-            "payment-method-save": {
-                "title": "Save changes",
-                "message": "The payment method has been modified. Do you want to save changes?"
-            }
-        },
-        "widgets": {
-            "store-payment-widget": {
-                "title": "Zahlungsmethoden",
-                "blade-subtitle": "Zahlungsmethoden"
-            }
-        },
+  "payment": {
+    "blades": {
+      "payment-method-detail": {
+        "subtitle": "Zahlungsmethode bearbeiten",
         "labels": {
-            "DefaultManualPaymentMethod": {
-                "name": "Manuelle test methode",
-                "description": "Manuelle test methode, nicht in der produktion verwenden"
-            }
+          "is-active": "Ist aktiv",
+          "is-partial-payments-available": "Ist Teilzahlung verfügbar",
+          "allow-deferred-payment": "Status für beendete Zahlungen anwenden",
+          "name": "Name",
+          "code": "Code",
+          "description": "Beschreibung",
+          "settings": "Einstellungen",
+          "logoUrl": "Logo-URL"
+        },
+        "placeholders": {
+          "description": "Beschreibung eingeben"
         }
+      },
+      "payment-method-list": {
+        "subtitle": "Zahlungsmethode bearbeiten",
+        "labels": {
+          "is-active": "Ist aktiv",
+          "payment-method": "Zahlungsmethode",
+          "note": "Ordnen Sie die Reihenfolge an, in der die Zahlungsmethoden im Webshop angezeigt werden. Verwenden Sie Drag & Drop, um sie neu anzuordnen"
+        },
+        "placeholders": {
+          "description": "Beschreibung eingeben"
+        }
+      }
     },
-    "settings": {
-        "VirtoCommerce.Payment.DefaultManualPaymentMethod": {
-            "Logo": {
-                "title": "Logo url",
-                "description": "Zahlungsmethode logo url"
-            }
-        }
+    "dialogs": {
+      "payment-method-save": {
+        "title": "Änderungen speichern",
+        "message": "Die Zahlungsmethode wurde geändert. Möchten Sie die Änderungen speichern?"
+      }
+    },
+    "widgets": {
+      "store-payment-widget": {
+        "title": "Zahlungsmethoden",
+        "blade-subtitle": "Zahlungsmethoden"
+      }
+    },
+    "labels": {
+      "DefaultManualPaymentMethod": {
+        "name": "Manuelle Test-Zahlungsmethode",
+        "description": "Manuelle Testmethode, nicht in der Produktion verwenden"
+      }
     }
+  },
+  "settings": {
+    "VirtoCommerce.Payment.DefaultManualPaymentMethod": {
+      "ExampleSetting": {
+        "title": "Beispiel-Einstellung",
+        "description": "Beispiel-Einstellung für Zahlungsmethoden"
+      }
+    }
+  },
+  "module": {
+    "VirtoCommerce.Payment": {
+      "description": "Zahlungsmethoden exportieren/importieren"
+    }
+  }
 }

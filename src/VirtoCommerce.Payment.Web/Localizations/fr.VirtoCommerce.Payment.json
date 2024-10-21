@@ -1,0 +1,64 @@
+{
+  "payment": {
+    "blades": {
+      "payment-method-detail": {
+        "subtitle": "Modifier le mode de paiement",
+        "labels": {
+          "is-active": "Est actif",
+          "is-partial-payments-available": "Le paiement partiel est-il disponible",
+          "allow-deferred-payment": "Appliquer le statut pour le paiement terminé",
+          "name": "Nom",
+          "code": "Code",
+          "description": "Description",
+          "settings": "Paramètres",
+          "logoUrl": "URL du logo"
+        },
+        "placeholders": {
+          "description": "Entrez la description"
+        }
+      },
+      "payment-method-list": {
+        "subtitle": "Modifier le mode de paiement",
+        "labels": {
+          "is-active": "Est actif",
+          "payment-method": "Mode de paiement",
+          "note": "Organisez l'ordre dans lequel les modes de paiement sont affichés dans la boutique en ligne. Utilisez le glisser-déposer pour les réorganiser"
+        },
+        "placeholders": {
+          "description": "Entrez la description"
+        }
+      }
+    },
+    "dialogs": {
+      "payment-method-save": {
+        "title": "Sauvegarder les modifications",
+        "message": "Le mode de paiement a été modifié. Voulez-vous sauvegarder les modifications?"
+      }
+    },
+    "widgets": {
+      "store-payment-widget": {
+        "title": "Modes de paiement",
+        "blade-subtitle": "Modes de paiement"
+      }
+    },
+    "labels": {
+      "DefaultManualPaymentMethod": {
+        "name": "Méthode de paiement manuelle de test",
+        "description": "Méthode de test manuelle, ne pas utiliser en production"
+      }
+    }
+  },
+  "settings": {
+    "VirtoCommerce.Payment.DefaultManualPaymentMethod": {
+      "ExampleSetting": {
+        "title": "Paramètre d'exemple",
+        "description": "Paramètre d'exemple pour le mode de paiement"
+      }
+    }
+  },
+  "module": {
+    "VirtoCommerce.Payment": {
+      "description": "Exporter/Importer des modes de paiement"
+    }
+  }
+}

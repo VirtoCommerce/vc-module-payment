@@ -1,0 +1,64 @@
+{
+  "payment": {
+    "blades": {
+      "payment-method-detail": {
+        "subtitle": "编辑支付方式",
+        "labels": {
+          "is-active": "是否激活",
+          "is-partial-payments-available": "是否支持部分支付",
+          "allow-deferred-payment": "应用已终止支付的状态",
+          "name": "名称",
+          "code": "代码",
+          "description": "描述",
+          "settings": "设置",
+          "logoUrl": "Logo URL"
+        },
+        "placeholders": {
+          "description": "输入描述"
+        }
+      },
+      "payment-method-list": {
+        "subtitle": "编辑支付方式",
+        "labels": {
+          "is-active": "是否激活",
+          "payment-method": "支付方式",
+          "note": "安排支付方式在网上商店中的显示顺序。使用拖放功能重新排序"
+        },
+        "placeholders": {
+          "description": "输入描述"
+        }
+      }
+    },
+    "dialogs": {
+      "payment-method-save": {
+        "title": "保存更改",
+        "message": "支付方式已被修改。您想保存更改吗？"
+      }
+    },
+    "widgets": {
+      "store-payment-widget": {
+        "title": "支付方式",
+        "blade-subtitle": "支付方式"
+      }
+    },
+    "labels": {
+      "DefaultManualPaymentMethod": {
+        "name": "手动测试支付方式",
+        "description": "手动测试方法，生产环境中请勿使用"
+      }
+    }
+  },
+  "settings": {
+    "VirtoCommerce.Payment.DefaultManualPaymentMethod": {
+      "ExampleSetting": {
+        "title": "示例设置",
+        "description": "支付方式示例设置"
+      }
+    }
+  },
+  "module": {
+    "VirtoCommerce.Payment": {
+      "description": "导出/导入支付方式"
+    }
+  }
+}

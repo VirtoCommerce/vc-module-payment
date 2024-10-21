@@ -2,26 +2,27 @@
   "payment": {
     "blades": {
       "payment-method-detail": {
-        "subtitle": "Изменить способ оплаты",
+        "subtitle": "Редактировать способ оплаты",
         "labels": {
           "is-active": "Активен",
-          "is-partial-payments-available": "Доступны частичные платежи",
+          "is-partial-payments-available": "Доступна частичная оплата",
+          "allow-deferred-payment": "Применить статус для завершенной оплаты",
           "name": "Название",
           "code": "Код",
           "description": "Описание",
           "settings": "Настройки",
-          "logoUrl":  "URL лого"
+          "logoUrl": "URL логотипа"
         },
         "placeholders": {
           "description": "Введите описание"
         }
       },
       "payment-method-list": {
-        "subtitle": "Изменить способ оплаты",
+        "subtitle": "Редактировать способ оплаты",
         "labels": {
           "is-active": "Активен",
           "payment-method": "Способ оплаты",
-          "note": "Укажите порядок отображения способов оплаты в интернет-магазине. Перетащите элементы, чтобы изменить порядок"
+          "note": "Измените порядок, в котором способы оплаты отображаются в интернет-магазине. Перетаскивайте наименования для изменения порядка"
         },
         "placeholders": {
           "description": "Введите описание"
@@ -31,7 +32,7 @@
     "dialogs": {
       "payment-method-save": {
         "title": "Сохранить изменения",
-        "message": "Способ оплаты изменился. Хотите сохранить изменения?"
+        "message": "Способ оплаты был изменен. Вы хотите сохранить изменения?"
       }
     },
     "widgets": {
@@ -42,22 +43,22 @@
     },
     "labels": {
       "DefaultManualPaymentMethod": {
-        "name": "Ручной тестовый метод",
-        "description": "Ручной тестовы метод, не использовать в poduction"
+        "name": "Ручной тестовый способ оплаты",
+        "description": "Ручной тестовый метод, не используйте в производстве"
       }
     }
   },
   "settings": {
     "VirtoCommerce.Payment.DefaultManualPaymentMethod": {
       "ExampleSetting": {
-        "title": "Пример настроек",
-        "description": "Пример настройки способа оплаты"
+        "title": "Пример настройки",
+        "description": "Настройка примера для способа оплаты"
       }
     }
   },
   "module": {
     "VirtoCommerce.Payment": {
-      "description": "Экспорт/Импорт способов оплаты"
+      "description": "Экспорт/импорт способов оплаты"
     }
   }
 }
