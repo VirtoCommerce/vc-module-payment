@@ -1,0 +1,64 @@
+{
+  "payment": {
+    "blades": {
+      "payment-method-detail": {
+        "subtitle": "支払い方法を編集",
+        "labels": {
+          "is-active": "アクティブ",
+          "is-partial-payments-available": "部分的な支払いは利用可能ですか？",
+          "allow-deferred-payment": "終了した支払いのステータスを適用",
+          "name": "名前",
+          "code": "コード",
+          "description": "説明",
+          "settings": "設定",
+          "logoUrl": "ロゴのURL"
+        },
+        "placeholders": {
+          "description": "説明を入力"
+        }
+      },
+      "payment-method-list": {
+        "subtitle": "支払い方法を編集",
+        "labels": {
+          "is-active": "アクティブ",
+          "payment-method": "支払い方法",
+          "note": "オンラインストアに表示される支払い方法の順序を整理します。ドラッグアンドドロップを使用して順序を変更します"
+        },
+        "placeholders": {
+          "description": "説明を入力"
+        }
+      }
+    },
+    "dialogs": {
+      "payment-method-save": {
+        "title": "変更を保存",
+        "message": "支払い方法が変更されました。変更を保存しますか？"
+      }
+    },
+    "widgets": {
+      "store-payment-widget": {
+        "title": "支払い方法",
+        "blade-subtitle": "支払い方法"
+      }
+    },
+    "labels": {
+      "DefaultManualPaymentMethod": {
+        "name": "手動テスト支払い方法",
+        "description": "手動テストメソッド、運用では使用しないでください"
+      }
+    }
+  },
+  "settings": {
+    "VirtoCommerce.Payment.DefaultManualPaymentMethod": {
+      "ExampleSetting": {
+        "title": "例の設定",
+        "description": "支払い方法の例の設定"
+      }
+    }
+  },
+  "module": {
+    "VirtoCommerce.Payment": {
+      "description": "支払い方法のエクスポート/インポート"
+    }
+  }
+}
