@@ -22,7 +22,7 @@
         "labels": {
           "is-active": "Is active",
           "payment-method": "Payment method",
-          "note": "Set the order how payment methods appear sorted in web store. Drag and drop to change the order."
+          "note": "Arrange the order in which payment methods are displayed in the web store. Use drag and drop to reorder them"
         },
         "placeholders": {
           "description": "Enter description"
@@ -44,7 +44,7 @@
     "labels": {
       "DefaultManualPaymentMethod": {
         "name": "Manual test payment method",
-        "description": "Manual test method, don't use on production"
+        "description": "Manual test method, don't use in production"
       }
     }
   },

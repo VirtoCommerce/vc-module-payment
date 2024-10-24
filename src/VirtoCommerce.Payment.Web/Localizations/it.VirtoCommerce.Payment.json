@@ -1,0 +1,64 @@
+{
+  "payment": {
+    "blades": {
+      "payment-method-detail": {
+        "subtitle": "Modifica metodo di pagamento",
+        "labels": {
+          "is-active": "È attivo",
+          "is-partial-payments-available": "È disponibile il pagamento parziale",
+          "allow-deferred-payment": "Applica stato per pagamento terminato",
+          "name": "Nome",
+          "code": "Codice",
+          "description": "Descrizione",
+          "settings": "Impostazioni",
+          "logoUrl": "URL del logo"
+        },
+        "placeholders": {
+          "description": "Inserisci descrizione"
+        }
+      },
+      "payment-method-list": {
+        "subtitle": "Modifica metodo di pagamento",
+        "labels": {
+          "is-active": "È attivo",
+          "payment-method": "Metodo di pagamento",
+          "note": "Organizza l'ordine in cui i metodi di pagamento vengono visualizzati nel negozio online. Usa il drag and drop per riordinarli"
+        },
+        "placeholders": {
+          "description": "Inserisci descrizione"
+        }
+      }
+    },
+    "dialogs": {
+      "payment-method-save": {
+        "title": "Salva modifiche",
+        "message": "Il metodo di pagamento è stato modificato. Vuoi salvare le modifiche?"
+      }
+    },
+    "widgets": {
+      "store-payment-widget": {
+        "title": "Metodi di pagamento",
+        "blade-subtitle": "Metodi di pagamento"
+      }
+    },
+    "labels": {
+      "DefaultManualPaymentMethod": {
+        "name": "Metodo di pagamento manuale di test",
+        "description": "Metodo di test manuale, non utilizzare in produzione"
+      }
+    }
+  },
+  "settings": {
+    "VirtoCommerce.Payment.DefaultManualPaymentMethod": {
+      "ExampleSetting": {
+        "title": "Impostazione di esempio",
+        "description": "Impostazione di esempio per il metodo di pagamento"
+      }
+    }
+  },
+  "module": {
+    "VirtoCommerce.Payment": {
+      "description": "Esporta/Importa metodi di pagamento"
+    }
+  }
+}
