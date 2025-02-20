@@ -16,7 +16,7 @@ The Payment Module provides the ability to extend payment provider list with cus
 ## Documentation
 
 * [Payment module user documentation](https://docs.virtocommerce.org/platform/user-guide/payment/overview/)
-* [REST AP](https://virtostart-demo-admin.govirto.com/docs/index.html?urls.primaryName=VirtoCommerce.Payment)
+* [REST API](https://virtostart-demo-admin.govirto.com/docs/index.html?urls.primaryName=VirtoCommerce.Payment)
 * [View on Github](https://github.com/VirtoCommerce/vc-module-payment)
 
 ## References
