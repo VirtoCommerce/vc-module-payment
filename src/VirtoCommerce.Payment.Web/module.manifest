@@ -9,7 +9,7 @@
     <dependency id="VirtoCommerce.Store" version="3.809.0" />
   </dependencies>
   <title>Payment module</title>
-  <description>Add payment methods management</description>
+  <description>Provides management and integration of various payment methods.</description>  
   <authors>
     <author>Virto Commerce</author>
   </authors>
@@ -20,7 +20,7 @@
   <iconUrl>Modules/$(VirtoCommerce.Payment)/Content/logo.png</iconUrl>
   <requireLicenseAcceptance>false</requireLicenseAcceptance>
   <releaseNotes />
-  <copyright>Copyright © 2011-2024 Virto Commerce. All rights reserved</copyright>
+  <copyright>Copyright © 2011-2025 Virto Commerce. All rights reserved</copyright>
   <tags>payments</tags>
   <assemblyFile>VirtoCommerce.PaymentModule.Web.dll</assemblyFile>
   <moduleType>VirtoCommerce.PaymentModule.Web.Module, VirtoCommerce.PaymentModule.Web</moduleType>
