@@ -1,12 +1,11 @@
-using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using MockQueryable.Moq;
 using Moq;
-using Moq.EntityFrameworkCore;
 using VirtoCommerce.PaymentModule.Core.Model.Search;
 using VirtoCommerce.PaymentModule.Core.Services;
 using VirtoCommerce.PaymentModule.Data;
@@ -27,52 +26,46 @@ namespace VirtoCommerce.Payment.Test
         public async Task SearchPaymentMethods_ReturnRegisteredPayments()
         {
             // Arrange
-            var settingsManager = new Mock<ISettingsManager>();
-            var eventPublisher = new Mock<IEventPublisher>();
-
             var paymentMethods = new List<StorePaymentMethodEntity>
             {
                 new() { Id = "1", Code = "Default", TypeName = nameof(DefaultManualPaymentMethod), },
                 new() { Id = "2", Code = "not-a-class-name", TypeName = nameof(TestPaymentMethod), },
             };
 
-            var options = new DbContextOptionsBuilder<PaymentDbContext>()
-                .UseSqlServer("TestDb")
-                .Options;
+            var searchService = CreateService(paymentMethods);
 
-            var dbContext = new Mock<PaymentDbContext>(options);
-            dbContext.Setup(x => x.Set<StorePaymentMethodEntity>())
-                .ReturnsDbSet(paymentMethods);
+            // Act
+            var results = await searchService.SearchAsync(new PaymentMethodsSearchCriteria { WithoutTransient = true });
 
-            try
-            {
-                var paymentRepository = new PaymentRepository(dbContext.Object);
-                var memoryCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
-                var platformMemoryCache = new PlatformMemoryCache(memoryCache, Options.Create(new CachingOptions()), new Mock<ILogger<PlatformMemoryCache>>().Object);
-                var factory = () => paymentRepository;
-                var crudOptions = Options.Create(new CrudOptions());
-                var crudService = new PaymentMethodsService(factory, platformMemoryCache, eventPublisher.Object, settingsManager.Object);
-                var paymentMethodRegistrar = (IPaymentMethodsRegistrar)crudService;
-                paymentMethodRegistrar.RegisterPaymentMethod<TestPaymentMethod>();
+            // Assert
+            Assert.Equal(results.Results.Count, results.TotalCount);
+            Assert.Equal("not-a-class-name", results.Results[0].Code);
+        }
 
-                var searchService = new PaymentMethodsSearchService(factory,
-                    platformMemoryCache, crudService, crudOptions, settingsManager.Object, eventPublisher.Object);
+        private PaymentMethodsSearchService CreateService(List<StorePaymentMethodEntity> paymentsInDb)
+        {
+            var settingsManager = new Mock<ISettingsManager>();
+            var eventPublisher = new Mock<IEventPublisher>();
 
-                // Act
-                var results = await searchService.SearchAsync(new PaymentMethodsSearchCriteria { WithoutTransient = true });
+            var paymentMethodsDbSet = paymentsInDb.BuildMockDbSet();
 
-                // Assert
-                Assert.Equal(results.Results.Count, results.TotalCount);
-                Assert.Equal("not-a-class-name", results.Results[0].Code);
-            }
-            catch (Exception ex)
-            {
-                // Handle exception
-                throw new Exception("An error occurred while executing the test.", ex);
-            }
-            finally
-            {
-            }
+            var paymentRepository = new Mock<IPaymentRepository>();
+            paymentRepository.Setup(x => x.PaymentMethods).Returns(paymentMethodsDbSet.Object);
+            paymentRepository.Setup(x => x.GetByIdsAsync(new List<string> { "2" }, It.IsAny<string>()))
+                .ReturnsAsync(paymentsInDb.Skip(1).ToList());
+
+            var memoryCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
+            var platformMemoryCache = new PlatformMemoryCache(memoryCache, Options.Create(new CachingOptions()), new Mock<ILogger<PlatformMemoryCache>>().Object);
+            var factory = () => paymentRepository.Object;
+            var crudOptions = Options.Create(new CrudOptions());
+            var crudService = new PaymentMethodsService(factory, platformMemoryCache, eventPublisher.Object, settingsManager.Object);
+            var paymentMethodRegistrar = (IPaymentMethodsRegistrar)crudService;
+            paymentMethodRegistrar.RegisterPaymentMethod<TestPaymentMethod>();
+
+            var searchService = new PaymentMethodsSearchService(factory,
+                platformMemoryCache, crudService, crudOptions, settingsManager.Object, eventPublisher.Object);
+
+            return searchService;
         }
     }
 }
