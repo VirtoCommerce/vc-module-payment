@@ -45,6 +45,7 @@ namespace VirtoCommerce.PaymentModule.Data.Services
                 .Select(x => AbstractTypeFactory<PaymentMethod>.TryCreateInstance(x.TypeName))
                 .Select(x => x.Code)
                 .ToArray();
+
             query = query.Where(x => registeredPaymentCodes.Contains(x.Code));
 
             if (!string.IsNullOrEmpty(criteria.Keyword))

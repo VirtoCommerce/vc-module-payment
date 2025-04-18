@@ -7,7 +7,7 @@ namespace VirtoCommerce.Payment.Test;
 
 public class TestPaymentMethod : PaymentMethod
 {
-    public TestPaymentMethod() : base("not-a-class-name")
+    public TestPaymentMethod(string code) : base(code)
     {
     }
 
