@@ -41,8 +41,11 @@ namespace VirtoCommerce.PaymentModule.Data.Services
             var query = ((IPaymentRepository)repository).PaymentMethods;
 
             // Return only registered payment methods
-            var registeredPaymentMethods = AbstractTypeFactory<PaymentMethod>.AllTypeInfos.Select(x => x.TypeName).ToArray();
-            query = query.Where(x => registeredPaymentMethods.Contains(x.Code));
+            var registeredPaymentCodes = AbstractTypeFactory<PaymentMethod>.AllTypeInfos
+                .Select(x => AbstractTypeFactory<PaymentMethod>.TryCreateInstance(x.TypeName))
+                .Select(x => x.Code)
+                .ToArray();
+            query = query.Where(x => registeredPaymentCodes.Contains(x.Code));
 
             if (!string.IsNullOrEmpty(criteria.Keyword))
             {
