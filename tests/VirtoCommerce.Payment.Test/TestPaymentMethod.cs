@@ -13,6 +13,7 @@ public class TestPaymentMethod : PaymentMethod
 
     public override PaymentMethodType PaymentMethodType { get; }
     public override PaymentMethodGroupType PaymentMethodGroupType { get; }
+
     public override ProcessPaymentRequestResult ProcessPayment(ProcessPaymentRequest request)
     {
         throw new NotImplementedException();

@@ -26,20 +26,22 @@ namespace VirtoCommerce.Payment.Test
         public async Task SearchPaymentMethods_ReturnRegisteredPayments()
         {
             // Arrange
-            var paymentMethods = new List<StorePaymentMethodEntity>
+            var storedPaymentMethods = new List<StorePaymentMethodEntity>
             {
                 new() { Id = "1", Code = nameof(DefaultManualPaymentMethod), TypeName = nameof(DefaultManualPaymentMethod), },
+
+                // register only this method
                 new() { Id = "2", Code = "not-a-class-name-1", TypeName = nameof(TestPaymentMethod), },
                 new() { Id = "3", Code = "not-a-class-name-2", TypeName = nameof(TestPaymentMethod), },
             };
 
-            var searchService = CreateService(paymentMethods);
+            var searchService = CreateService(storedPaymentMethods);
 
             // Act
             var results = await searchService.SearchAsync(new PaymentMethodsSearchCriteria { WithoutTransient = true });
 
             // Assert
-            Assert.Equal(results.Results.Count, results.TotalCount);
+            Assert.Equal(1, results.TotalCount);
             Assert.Equal("not-a-class-name-1", results.Results[0].Code);
         }
 
@@ -52,7 +54,7 @@ namespace VirtoCommerce.Payment.Test
 
             var paymentRepository = new Mock<IPaymentRepository>();
             paymentRepository.Setup(x => x.PaymentMethods).Returns(paymentMethodsDbSet.Object);
-            paymentRepository.Setup(x => x.GetByIdsAsync(new List<string> { "2" }, It.IsAny<string>()))
+            paymentRepository.Setup(x => x.GetByIdsAsync(It.IsAny<IList<string>>(), It.IsAny<string>()))
                 .ReturnsAsync(paymentsInDb.Skip(1).Take(1).ToList());
 
             var memoryCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
