@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VirtoCommerce.PaymentModule
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VirtoCommerce.PaymentModule.Data.PostgreSql", "src\VirtoCommerce.PaymentModule.Data.PostgreSql\VirtoCommerce.PaymentModule.Data.PostgreSql.csproj", "{5A64A026-FDBC-454D-990B-A95CA912A700}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VirtoCommerce.Payment.Tests", "tests\VirtoCommerce.Payment.Tests\VirtoCommerce.Payment.Tests.csproj", "{EFB5FE4C-E362-8F05-A400-03F44DC270AC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -49,6 +51,10 @@ Global
 		{5A64A026-FDBC-454D-990B-A95CA912A700}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5A64A026-FDBC-454D-990B-A95CA912A700}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5A64A026-FDBC-454D-990B-A95CA912A700}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EFB5FE4C-E362-8F05-A400-03F44DC270AC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EFB5FE4C-E362-8F05-A400-03F44DC270AC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EFB5FE4C-E362-8F05-A400-03F44DC270AC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EFB5FE4C-E362-8F05-A400-03F44DC270AC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -60,6 +66,7 @@ Global
 		{E9777CFC-EABC-4C76-B271-DE3F05DBB831} = {66879BC8-A7C7-4AF9-81E7-7AFE3D530F4D}
 		{DAC15B9B-B765-4F64-AAFF-BA7AB25BE711} = {66879BC8-A7C7-4AF9-81E7-7AFE3D530F4D}
 		{5A64A026-FDBC-454D-990B-A95CA912A700} = {66879BC8-A7C7-4AF9-81E7-7AFE3D530F4D}
+		{EFB5FE4C-E362-8F05-A400-03F44DC270AC} = {B2B99B4E-1B33-4DCC-BDB2-9ACBE92F5743}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F676C4CC-32D3-43B4-AA54-31E14F44E08B}
