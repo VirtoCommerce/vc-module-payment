@@ -29,13 +29,15 @@ public class PaymentSearchServiceUnitTests
         var storedPaymentMethods = new List<StorePaymentMethodEntity>
         {
             new() { Id = "1", Code = nameof(DefaultManualPaymentMethod), TypeName = nameof(DefaultManualPaymentMethod), },
-
-            // register only this method
             new() { Id = "2", Code = "not-a-class-name-1", TypeName = nameof(TestPaymentMethod), },
             new() { Id = "3", Code = "not-a-class-name-2", TypeName = nameof(TestPaymentMethod), },
         };
 
-        var searchService = CreateService(storedPaymentMethods);
+        var paymentRepositoryMock = CreateRepositoryMock(storedPaymentMethods);
+        var (registrar, searchService) = CreateService(paymentRepositoryMock);
+
+        // Register only one payment method
+        registrar.RegisterPaymentMethod(() => new TestPaymentMethod("not-a-class-name-1"));
 
         // Act
         var results = await searchService.SearchAsync(new PaymentMethodsSearchCriteria { WithoutTransient = true });
@@ -45,29 +47,37 @@ public class PaymentSearchServiceUnitTests
         Assert.Equal("not-a-class-name-1", results.Results[0].Code);
     }
 
-    private static PaymentMethodsSearchService CreateService(List<StorePaymentMethodEntity> paymentsInDb)
-    {
-        var settingsManager = new Mock<ISettingsManager>();
-        var eventPublisher = new Mock<IEventPublisher>();
 
+    private static Mock<IPaymentRepository> CreateRepositoryMock(List<StorePaymentMethodEntity> paymentsInDb)
+    {
         var paymentMethodsDbSet = paymentsInDb.BuildMockDbSet();
 
         var paymentRepository = new Mock<IPaymentRepository>();
         paymentRepository.Setup(x => x.PaymentMethods).Returns(paymentMethodsDbSet.Object);
-        paymentRepository.Setup(x => x.GetByIdsAsync(It.IsAny<IList<string>>(), It.IsAny<string>()))
-            .ReturnsAsync(paymentsInDb.Skip(1).Take(1).ToList());
+        paymentRepository
+            .Setup(x => x.GetByIdsAsync(It.IsAny<IList<string>>(), It.IsAny<string>()))
+            .ReturnsAsync((IList<string> ids, string _) =>
+            {
+                return paymentsInDb.Where(x => ids.Contains(x.Id)).ToList();
+            });
+
+        return paymentRepository;
+    }
+
+    private static (IPaymentMethodsRegistrar, PaymentMethodsSearchService) CreateService(Mock<IPaymentRepository> paymentRepositoryMock)
+    {
+        var factory = () => paymentRepositoryMock.Object;
 
         var memoryCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
         var platformMemoryCache = new PlatformMemoryCache(memoryCache, Options.Create(new CachingOptions()), new Mock<ILogger<PlatformMemoryCache>>().Object);
-        var factory = () => paymentRepository.Object;
-        var crudOptions = Options.Create(new CrudOptions());
+
+        var eventPublisher = new Mock<IEventPublisher>();
+        var settingsManager = new Mock<ISettingsManager>();
         var crudService = new PaymentMethodsService(factory, platformMemoryCache, eventPublisher.Object, settingsManager.Object);
-        var paymentMethodRegistrar = (IPaymentMethodsRegistrar)crudService;
-        paymentMethodRegistrar.RegisterPaymentMethod(() => new TestPaymentMethod("not-a-class-name-1"));
 
-        var searchService = new PaymentMethodsSearchService(factory,
-            platformMemoryCache, crudService, crudOptions, settingsManager.Object, eventPublisher.Object);
+        var crudOptions = Options.Create(new CrudOptions());
+        var searchService = new PaymentMethodsSearchService(factory, platformMemoryCache, crudService, crudOptions, settingsManager.Object, eventPublisher.Object);
 
-        return searchService;
+        return (crudService, searchService);
     }
 }
