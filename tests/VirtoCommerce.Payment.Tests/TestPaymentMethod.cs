@@ -3,7 +3,7 @@ using System.Collections.Specialized;
 using VirtoCommerce.PaymentModule.Core.Model;
 using VirtoCommerce.PaymentModule.Model.Requests;
 
-namespace VirtoCommerce.Payment.Test;
+namespace VirtoCommerce.Payment.Tests;
 
 public class TestPaymentMethod : PaymentMethod
 {
