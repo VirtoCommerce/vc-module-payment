@@ -40,7 +40,7 @@ public class PaymentSearchServiceUnitTests
         registrar.RegisterPaymentMethod(() => new TestPaymentMethod("not-a-class-name-1"));
 
         // Act
-        var results = await searchService.SearchAsync(new PaymentMethodsSearchCriteria { WithoutTransient = true });
+        var results = await searchService.SearchAsync(new PaymentMethodsSearchCriteria());
 
         // Assert
         Assert.Equal(1, results.TotalCount);
