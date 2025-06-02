@@ -8,12 +8,16 @@
           "is-partial-payments-available": "是否支持部分支付",
           "allow-deferred-payment": "应用已终止支付的状态",
           "name": "名称",
+          "localized-name": "本地化名称",
           "code": "代码",
           "description": "描述",
           "settings": "设置",
-          "logoUrl": "Logo URL"
+          "logoUrl": "Logo URL",
+          "show-more-languages": "显示更多语言",
+          "show-less-languages": "显示更少语言"
         },
         "placeholders": {
+          "localized-name": "输入名称",
           "description": "输入描述"
         }
       },

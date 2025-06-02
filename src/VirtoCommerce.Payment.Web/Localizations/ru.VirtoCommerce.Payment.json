@@ -8,12 +8,16 @@
           "is-partial-payments-available": "Доступна частичная оплата",
           "allow-deferred-payment": "Применить статус для завершенной оплаты",
           "name": "Название",
+          "localized-name": "Локализованное имя",
           "code": "Код",
           "description": "Описание",
           "settings": "Настройки",
-          "logoUrl": "URL логотипа"
+          "logoUrl": "URL логотипа",
+          "show-more-languages": "Показать больше языков",
+          "show-less-languages": "Показать меньше языков"
         },
         "placeholders": {
+          "localized-name": "Введите имя",
           "description": "Введите описание"
         }
       },
