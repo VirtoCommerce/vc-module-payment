@@ -27,6 +27,21 @@ namespace VirtoCommerce.PaymentModule.Data.Repositories
                 .HasDatabaseName("IX_StorePaymentMethodEntity_TypeName_StoreId")
                 .IsUnique();
 
+            modelBuilder.Entity<PaymentMethodLocalizedNameEntity>(builder =>
+            {
+                builder.ToTable("PaymentMethodLocalizedName").HasKey(x => x.Id);
+                builder.Property(x => x.Id).HasMaxLength(IdLength).ValueGeneratedOnAdd();
+
+                builder.HasOne(x => x.ParentEntity)
+                    .WithMany(x => x.LocalizedNames)
+                    .HasForeignKey(x => x.ParentEntityId)
+                    .IsRequired()
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                builder.HasIndex(x => new { x.LanguageCode, x.ParentEntityId }).IsUnique()
+                    .HasDatabaseName("IX_PaymentMethodLocalizedName_LanguageCode_ParentEntityId");
+            });
+
             base.OnModelCreating(modelBuilder);
 
 

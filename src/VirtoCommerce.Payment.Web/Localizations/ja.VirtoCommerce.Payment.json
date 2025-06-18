@@ -8,12 +8,16 @@
           "is-partial-payments-available": "部分的な支払いは利用可能ですか？",
           "allow-deferred-payment": "終了した支払いのステータスを適用",
           "name": "名前",
+          "localized-name": "ローカライズ名",
           "code": "コード",
           "description": "説明",
           "settings": "設定",
-          "logoUrl": "ロゴのURL"
+          "logoUrl": "ロゴのURL",
+          "show-more-languages": "さらに多くの言語を表示",
+          "show-less-languages": "表示言語を減らす"
         },
         "placeholders": {
+          "localized-name": "名前を入力してください",
           "description": "説明を入力"
         }
       },

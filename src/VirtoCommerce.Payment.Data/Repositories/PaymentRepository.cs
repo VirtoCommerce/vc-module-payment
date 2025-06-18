@@ -19,7 +19,9 @@ namespace VirtoCommerce.PaymentModule.Data.Repositories
         public async Task<IList<StorePaymentMethodEntity>> GetByIdsAsync(IList<string> ids, string responseGroup = null)
         {
             return await PaymentMethods
+                .Include(x => x.LocalizedNames)
                 .Where(x => ids.Contains(x.Id))
+                .AsSplitQuery()
                 .ToListAsync();
         }
     }
