@@ -85,6 +85,8 @@ namespace VirtoCommerce.PaymentModule.Core.Model
 
         #endregion
 
+        public LocalizedString LocalizedName { get; set; }
+
         /// <summary>
         /// Type of payment method
         /// </summary>

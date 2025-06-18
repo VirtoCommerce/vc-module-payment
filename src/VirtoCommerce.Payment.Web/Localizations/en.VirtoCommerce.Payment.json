@@ -8,12 +8,16 @@
           "is-partial-payments-available": "Is partial payment available",
           "allow-deferred-payment": "Apply status for terminated payment",
           "name": "Name",
+          "localized-name": "Localized name",
           "code": "Code",
           "description": "Description",
           "settings": "Settings",
-          "logoUrl": "Logo Url"
+          "logoUrl": "Logo Url",
+          "show-more-languages": "Show more languages",
+          "show-less-languages": "Show less languages"
         },
         "placeholders": {
+          "localized-name": "Enter name",
           "description": "Enter description"
         }
       },
