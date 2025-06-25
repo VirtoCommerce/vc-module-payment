@@ -8,12 +8,16 @@
           "is-partial-payments-available": "Czy dostępna jest płatność częściowa?",
           "allow-deferred-payment": "Zastosuj status dla zakończonej płatności",
           "name": "Nazwa",
+          "localized-name": "Zlokalizowana nazwa",
           "code": "Kod",
           "description": "Opis",
           "settings": "Ustawienia",
-          "logoUrl": "URL logo"
+          "logoUrl": "URL logo",
+          "show-more-languages": "Pokaż więcej języków",
+          "show-less-languages": "Pokaż mniej języków"
         },
         "placeholders": {
+          "localized-name": "Wpisz nazwę",
           "description": "Wprowadź opis"
         }
       },

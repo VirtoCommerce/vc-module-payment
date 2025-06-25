@@ -16,10 +16,41 @@ namespace VirtoCommerce.PaymentModule.Data.PostgreSql.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "6.0.0")
+                .HasAnnotation("ProductVersion", "8.0.11")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("VirtoCommerce.PaymentModule.Data.Model.PaymentMethodLocalizedNameEntity", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("LanguageCode")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<string>("ParentEntityId")
+                        .IsRequired()
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ParentEntityId");
+
+                    b.HasIndex("LanguageCode", "ParentEntityId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_PaymentMethodLocalizedName_LanguageCode_ParentEntityId");
+
+                    b.ToTable("PaymentMethodLocalizedName", (string)null);
+                });
 
             modelBuilder.Entity("VirtoCommerce.PaymentModule.Data.Model.StorePaymentMethodEntity", b =>
                 {
@@ -67,6 +98,22 @@ namespace VirtoCommerce.PaymentModule.Data.PostgreSql.Migrations
                         .HasDatabaseName("IX_StorePaymentMethodEntity_TypeName_StoreId");
 
                     b.ToTable("StorePaymentMethod", (string)null);
+                });
+
+            modelBuilder.Entity("VirtoCommerce.PaymentModule.Data.Model.PaymentMethodLocalizedNameEntity", b =>
+                {
+                    b.HasOne("VirtoCommerce.PaymentModule.Data.Model.StorePaymentMethodEntity", "ParentEntity")
+                        .WithMany("LocalizedNames")
+                        .HasForeignKey("ParentEntityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ParentEntity");
+                });
+
+            modelBuilder.Entity("VirtoCommerce.PaymentModule.Data.Model.StorePaymentMethodEntity", b =>
+                {
+                    b.Navigation("LocalizedNames");
                 });
 #pragma warning restore 612, 618
         }

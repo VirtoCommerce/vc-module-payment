@@ -1,5 +1,7 @@
 using System;
+using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using VirtoCommerce.PaymentModule.Core.Model;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.Domain;
@@ -29,6 +31,9 @@ namespace VirtoCommerce.PaymentModule.Data.Model
 
         public string Description { get; set; }
 
+        public ObservableCollection<PaymentMethodLocalizedNameEntity> LocalizedNames { get; set; }
+            = new NullCollection<PaymentMethodLocalizedNameEntity>();
+
         public virtual PaymentMethod ToModel(PaymentMethod paymentMethod)
         {
             if (paymentMethod == null)
@@ -45,6 +50,15 @@ namespace VirtoCommerce.PaymentModule.Data.Model
             paymentMethod.Priority = Priority;
             paymentMethod.StoreId = StoreId;
             paymentMethod.Description = Description;
+
+            if (LocalizedNames != null)
+            {
+                paymentMethod.LocalizedName = new LocalizedString();
+                foreach (var localizedName in LocalizedNames)
+                {
+                    paymentMethod.LocalizedName.SetValue(localizedName.LanguageCode, localizedName.Value);
+                }
+            }
 
             return paymentMethod;
         }
@@ -69,6 +83,18 @@ namespace VirtoCommerce.PaymentModule.Data.Model
             TypeName = paymentMethod.TypeName;
             Description = paymentMethod.Description;
 
+            if (paymentMethod.LocalizedName != null)
+            {
+                LocalizedNames = new ObservableCollection<PaymentMethodLocalizedNameEntity>(paymentMethod.LocalizedName.Values
+                    .Select(x =>
+                    {
+                        var entity = AbstractTypeFactory<PaymentMethodLocalizedNameEntity>.TryCreateInstance();
+                        entity.LanguageCode = x.Key;
+                        entity.Value = x.Value;
+                        return entity;
+                    }));
+            }
+
             return this;
         }
 
@@ -87,6 +113,12 @@ namespace VirtoCommerce.PaymentModule.Data.Model
             target.Priority = Priority;
             target.StoreId = StoreId;
             target.Description = Description;
+
+            if (!LocalizedNames.IsNullCollection())
+            {
+                var localizedNameComparer = AnonymousComparer.Create((PaymentMethodLocalizedNameEntity x) => $"{x.Value}-{x.LanguageCode}");
+                LocalizedNames.Patch(target.LocalizedNames, localizedNameComparer, (sourceValue, targetValue) => { });
+            }
         }
     }
 }

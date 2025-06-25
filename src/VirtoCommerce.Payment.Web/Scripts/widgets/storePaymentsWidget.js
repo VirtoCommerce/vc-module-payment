@@ -4,6 +4,7 @@ angular.module('virtoCommerce.paymentModule').controller('virtoCommerce.paymentM
     $scope.openBlade = function () {
         var newBlade = {
             id: "storeChildBlade",
+            store: blade.currentEntity,
             storeId: blade.currentEntity.id,
             title: blade.title,
             subtitle: 'payment.widgets.store-payment-widget.blade-subtitle',
