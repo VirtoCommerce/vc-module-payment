@@ -51,6 +51,8 @@ namespace VirtoCommerce.PaymentModule.Core.Model
             }
         }
 
+        public virtual bool AllowCartPayment => false;
+
         public string StoreId { get; set; }
 
         public string Description { get; set; }
