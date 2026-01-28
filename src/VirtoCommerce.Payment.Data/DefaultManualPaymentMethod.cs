@@ -17,7 +17,6 @@ namespace VirtoCommerce.PaymentModule.Data
 
         public override ProcessPaymentRequestResult ProcessPayment(ProcessPaymentRequest request)
         {
-            //TODO
             //context.Payment.PaymentStatus = PaymentStatus.Paid;
             //context.Payment.OuterId = context.Payment.Number;
             //context.Payment.CapturedDate = DateTime.UtcNow;
@@ -32,7 +31,6 @@ namespace VirtoCommerce.PaymentModule.Data
 
         public override VoidPaymentRequestResult VoidProcessPayment(VoidPaymentRequest request)
         {
-            //TODO
             //context.Payment.IsApproved = false;
             //context.Payment.PaymentStatus = PaymentStatus.Voided;
             //context.Payment.VoidedDate = DateTime.UtcNow;
@@ -43,7 +41,6 @@ namespace VirtoCommerce.PaymentModule.Data
 
         public override CapturePaymentRequestResult CaptureProcessPayment(CapturePaymentRequest request)
         {
-            //TODO
             //context.Payment.IsApproved = true;
             //context.Payment.PaymentStatus = PaymentStatus.Paid;
             //context.Payment.VoidedDate = DateTime.UtcNow;

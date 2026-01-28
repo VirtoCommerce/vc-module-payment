@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using VirtoCommerce.CoreModule.Core.Tax;
@@ -105,10 +106,10 @@ namespace VirtoCommerce.PaymentModule.Core.Model
         /// Method that contains logic of registration payment in external payment system
         /// </summary>
         /// <returns>Result of registration payment in external payment system</returns>
-        [Obsolete("Use ProcessPaymentAsync method instead", DiagnosticId = "VC0012", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
         public virtual ProcessPaymentRequestResult ProcessPayment(ProcessPaymentRequest request)
         {
-            // Default: Call async and block (allows gradual migration)
+            ThrowIfSyncAndAsyncMethodsAreNotOverridden(nameof(ProcessPayment), nameof(ProcessPaymentAsync));
+
             return ProcessPaymentAsync(request).GetAwaiter().GetResult();
         }
 
@@ -116,10 +117,10 @@ namespace VirtoCommerce.PaymentModule.Core.Model
         /// Method that contains logic of checking payment status of payment in external payment system
         /// </summary>
         /// <returns>Result of checking payment in external payment system</returns>
-        [Obsolete("Use PostProcessPaymentAsync method instead", DiagnosticId = "VC0012", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
         public virtual PostProcessPaymentRequestResult PostProcessPayment(PostProcessPaymentRequest request)
         {
-            // Default: Call async and block (allows gradual migration)
+            ThrowIfSyncAndAsyncMethodsAreNotOverridden(nameof(PostProcessPayment), nameof(PostProcessPaymentAsync));
+
             return PostProcessPaymentAsync(request).GetAwaiter().GetResult();
         }
 
@@ -127,10 +128,10 @@ namespace VirtoCommerce.PaymentModule.Core.Model
         /// Voids the payment
         /// </summary>
         /// <returns>Result of voiding payment in external payment system</returns>
-        [Obsolete("Use VoidProcessPaymentAsync method instead", DiagnosticId = "VC0012", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
         public virtual VoidPaymentRequestResult VoidProcessPayment(VoidPaymentRequest request)
         {
-            // Default: Call async and block (allows gradual migration)
+            ThrowIfSyncAndAsyncMethodsAreNotOverridden(nameof(VoidProcessPayment), nameof(VoidProcessPaymentAsync));
+
             return VoidProcessPaymentAsync(request).GetAwaiter().GetResult();
         }
 
@@ -139,10 +140,10 @@ namespace VirtoCommerce.PaymentModule.Core.Model
         /// </summary>
         /// <param name="context"></param>
         /// <returns>Result of capturing payment in external system</returns>
-        [Obsolete("Use CaptureProcessPaymentAsync method instead", DiagnosticId = "VC0012", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
         public virtual CapturePaymentRequestResult CaptureProcessPayment(CapturePaymentRequest request)
         {
-            // Default: Call async and block (allows gradual migration)
+            ThrowIfSyncAndAsyncMethodsAreNotOverridden(nameof(CaptureProcessPayment), nameof(CaptureProcessPaymentAsync));
+
             return CaptureProcessPaymentAsync(request).GetAwaiter().GetResult();
         }
 
@@ -151,10 +152,10 @@ namespace VirtoCommerce.PaymentModule.Core.Model
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        [Obsolete("Use RefundProcessPaymentAsync method instead", DiagnosticId = "VC0012", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
         public virtual RefundPaymentRequestResult RefundProcessPayment(RefundPaymentRequest request)
         {
-            // Default: Call async and block (allows gradual migration)
+            ThrowIfSyncAndAsyncMethodsAreNotOverridden(nameof(RefundProcessPayment), nameof(RefundProcessPaymentAsync));
+
             return RefundProcessPaymentAsync(request).GetAwaiter().GetResult();
         }
 
@@ -163,19 +164,30 @@ namespace VirtoCommerce.PaymentModule.Core.Model
         /// </summary>
         /// <param name="queryString">Query string of payment push request (external payment system or storefront)</param>
         /// <returns>Validation result</returns>
-        [Obsolete("Use ValidatePostProcessRequestAsync method instead", DiagnosticId = "VC0012", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
         public virtual ValidatePostProcessRequestResult ValidatePostProcessRequest(NameValueCollection queryString)
         {
-            // Default: Call async and block (allows gradual migration)
+            ThrowIfSyncAndAsyncMethodsAreNotOverridden(nameof(ValidatePostProcessRequest), nameof(ValidatePostProcessRequestAsync));
+
             return ValidatePostProcessRequestAsync(queryString).GetAwaiter().GetResult();
         }
 
-#pragma warning disable VC0012 // Type or member is obsolete
+        /// <summary>
+        /// Processes the payment asynchronously.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public virtual Task<ProcessPaymentRequestResult> ProcessPaymentAsync(ProcessPaymentRequest request, CancellationToken cancellationToken = default)
         {
             return Task.FromResult(ProcessPayment(request));
         }
 
+        /// <summary>
+        /// Post processes the payment asynchronously.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public virtual Task<PostProcessPaymentRequestResult> PostProcessPaymentAsync(PostProcessPaymentRequest request, CancellationToken cancellationToken = default)
         {
             return Task.FromResult(PostProcessPayment(request));
@@ -200,7 +212,19 @@ namespace VirtoCommerce.PaymentModule.Core.Model
         {
             return Task.FromResult(ValidatePostProcessRequest(queryString));
         }
-#pragma warning restore VC0012 
+
+        protected void ThrowIfSyncAndAsyncMethodsAreNotOverridden(string syncMethodName, string asyncMethodName)
+        {
+            var derivedType = GetType();
+            var syncMethod = derivedType.GetMethod(syncMethodName, BindingFlags.Public | BindingFlags.Instance);
+            var asyncMethod = derivedType.GetMethod(asyncMethodName, BindingFlags.Public | BindingFlags.Instance);
+
+            if (syncMethod?.DeclaringType == typeof(PaymentMethod) && asyncMethod?.DeclaringType == typeof(PaymentMethod))
+            {
+                throw new NotImplementedException($"Override {syncMethodName} or {asyncMethodName} in your payment method.");
+            }
+        }
+
 
         #region ICloneable members
 
