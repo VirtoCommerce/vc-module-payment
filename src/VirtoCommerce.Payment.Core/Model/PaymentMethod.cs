@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using VirtoCommerce.CoreModule.Core.Tax;
 using VirtoCommerce.PaymentModule.Model.Requests;
 using VirtoCommerce.Platform.Core.Common;
@@ -103,35 +105,102 @@ namespace VirtoCommerce.PaymentModule.Core.Model
         /// Method that contains logic of registration payment in external payment system
         /// </summary>
         /// <returns>Result of registration payment in external payment system</returns>
-        public abstract ProcessPaymentRequestResult ProcessPayment(ProcessPaymentRequest request);
+        [Obsolete("Use ProcessPaymentAsync method instead", DiagnosticId = "VC0012", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
+        public virtual ProcessPaymentRequestResult ProcessPayment(ProcessPaymentRequest request)
+        {
+            // Default: Call async and block (allows gradual migration)
+            return ProcessPaymentAsync(request).GetAwaiter().GetResult();
+        }
 
         /// <summary>
         /// Method that contains logic of checking payment status of payment in external payment system
         /// </summary>
         /// <returns>Result of checking payment in external payment system</returns>
-        public abstract PostProcessPaymentRequestResult PostProcessPayment(PostProcessPaymentRequest request);
+        [Obsolete("Use PostProcessPaymentAsync method instead", DiagnosticId = "VC0012", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
+        public virtual PostProcessPaymentRequestResult PostProcessPayment(PostProcessPaymentRequest request)
+        {
+            // Default: Call async and block (allows gradual migration)
+            return PostProcessPaymentAsync(request).GetAwaiter().GetResult();
+        }
 
         /// <summary>
         /// Voids the payment
         /// </summary>
         /// <returns>Result of voiding payment in external payment system</returns>
-        public abstract VoidPaymentRequestResult VoidProcessPayment(VoidPaymentRequest request);
+        [Obsolete("Use VoidProcessPaymentAsync method instead", DiagnosticId = "VC0012", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
+        public virtual VoidPaymentRequestResult VoidProcessPayment(VoidPaymentRequest request)
+        {
+            // Default: Call async and block (allows gradual migration)
+            return VoidProcessPaymentAsync(request).GetAwaiter().GetResult();
+        }
 
         /// <summary>
         /// Capture authorized payment
         /// </summary>
         /// <param name="context"></param>
         /// <returns>Result of capturing payment in external system</returns>
-        public abstract CapturePaymentRequestResult CaptureProcessPayment(CapturePaymentRequest context);
+        [Obsolete("Use CaptureProcessPaymentAsync method instead", DiagnosticId = "VC0012", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
+        public virtual CapturePaymentRequestResult CaptureProcessPayment(CapturePaymentRequest request)
+        {
+            // Default: Call async and block (allows gradual migration)
+            return CaptureProcessPaymentAsync(request).GetAwaiter().GetResult();
+        }
 
-        public abstract RefundPaymentRequestResult RefundProcessPayment(RefundPaymentRequest context);
+        /// <summary>
+        /// Refund payment
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [Obsolete("Use RefundProcessPaymentAsync method instead", DiagnosticId = "VC0012", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
+        public virtual RefundPaymentRequestResult RefundProcessPayment(RefundPaymentRequest request)
+        {
+            // Default: Call async and block (allows gradual migration)
+            return RefundProcessPaymentAsync(request).GetAwaiter().GetResult();
+        }
 
         /// <summary>
         /// Method that validates parameters in querystring of request to push URL
         /// </summary>
         /// <param name="queryString">Query string of payment push request (external payment system or storefront)</param>
         /// <returns>Validation result</returns>
-        public abstract ValidatePostProcessRequestResult ValidatePostProcessRequest(NameValueCollection queryString);
+        [Obsolete("Use ValidatePostProcessRequestAsync method instead", DiagnosticId = "VC0012", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
+        public virtual ValidatePostProcessRequestResult ValidatePostProcessRequest(NameValueCollection queryString)
+        {
+            // Default: Call async and block (allows gradual migration)
+            return ValidatePostProcessRequestAsync(queryString).GetAwaiter().GetResult();
+        }
+
+#pragma warning disable VC0012 // Type or member is obsolete
+        public virtual Task<ProcessPaymentRequestResult> ProcessPaymentAsync(ProcessPaymentRequest request, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(ProcessPayment(request));
+        }
+
+        public virtual Task<PostProcessPaymentRequestResult> PostProcessPaymentAsync(PostProcessPaymentRequest request, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(PostProcessPayment(request));
+        }
+
+        public virtual Task<VoidPaymentRequestResult> VoidProcessPaymentAsync(VoidPaymentRequest request, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(VoidProcessPayment(request));
+        }
+
+        public virtual Task<CapturePaymentRequestResult> CaptureProcessPaymentAsync(CapturePaymentRequest request, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(CaptureProcessPayment(request));
+        }
+
+        public virtual Task<RefundPaymentRequestResult> RefundProcessPaymentAsync(RefundPaymentRequest request, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(RefundProcessPayment(request));
+        }
+
+        public virtual Task<ValidatePostProcessRequestResult> ValidatePostProcessRequestAsync(NameValueCollection queryString, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(ValidatePostProcessRequest(queryString));
+        }
+#pragma warning restore VC0012 
 
         #region ICloneable members
 
