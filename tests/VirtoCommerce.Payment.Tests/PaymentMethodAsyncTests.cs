@@ -269,7 +269,6 @@ namespace VirtoCommerce.Payment.Tests
             method1.ProcessPayment(request);
             method2.ProcessPayment(request);
 
-            // Assert - all should work (cache should handle same type)
             method1.SyncMethodCalled.Should().BeTrue();
             method2.SyncMethodCalled.Should().BeTrue();
         }
