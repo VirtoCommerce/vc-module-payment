@@ -23,6 +23,7 @@ namespace VirtoCommerce.Payment.Tests
 
             public bool SyncMethodCalled { get; private set; }
 
+            [Obsolete]
             public override ProcessPaymentRequestResult ProcessPayment(ProcessPaymentRequest request)
             {
                 SyncMethodCalled = true;
@@ -65,6 +66,7 @@ namespace VirtoCommerce.Payment.Tests
             public bool SyncMethodCalled { get; private set; }
             public bool AsyncMethodCalled { get; private set; }
 
+            [Obsolete]
             public override ProcessPaymentRequestResult ProcessPayment(ProcessPaymentRequest request)
             {
                 SyncMethodCalled = true;
@@ -106,7 +108,9 @@ namespace VirtoCommerce.Payment.Tests
             var request = new ProcessPaymentRequest();
 
             // Act
+#pragma warning disable VC0012 // Type or member is obsolete
             var result = method.ProcessPayment(request);
+#pragma warning restore VC0012 // Type or member is obsolete
 
             // Assert
             method.SyncMethodCalled.Should().BeTrue();
@@ -152,41 +156,9 @@ namespace VirtoCommerce.Payment.Tests
             result.OuterId.Should().Be("async_456");
         }
 
-        [Fact]
-        public void AsyncOnly_CallSync_ShouldRouteToAsyncMethod()
-        {
-            // Arrange
-            var method = new AsyncOnlyPaymentMethod();
-            var request = new ProcessPaymentRequest();
-
-            // Act
-            var result = method.ProcessPayment(request);
-
-            // Assert
-            method.AsyncMethodCalled.Should().BeTrue();
-            result.IsSuccess.Should().BeTrue();
-            result.OuterId.Should().Be("async_456");
-        }
-
         #endregion
 
         #region Both-Overridden Tests
-
-        [Fact]
-        public void Both_CallSync_ShouldCallSyncDirectly()
-        {
-            // Arrange
-            var method = new BothOverriddenPaymentMethod();
-            var request = new ProcessPaymentRequest();
-
-            // Act
-            var result = method.ProcessPayment(request);
-
-            // Assert
-            method.SyncMethodCalled.Should().BeTrue();
-            method.AsyncMethodCalled.Should().BeFalse(); // Should NOT call async
-            result.OuterId.Should().Be("both_sync");
-        }
 
         [Fact]
         public async Task Both_CallAsync_ShouldCallAsyncDirectly()
@@ -209,19 +181,6 @@ namespace VirtoCommerce.Payment.Tests
         #region No Override Tests
 
         [Fact]
-        public void NoOverride_CallSync_ShouldThrow()
-        {
-            // Arrange
-            var method = new NoOverridePaymentMethod();
-            var request = new ProcessPaymentRequest();
-
-            // Act & Assert
-            var action = () => method.ProcessPayment(request);
-            action.Should().Throw<NotImplementedException>()
-                .WithMessage("Override*ProcessPayment*ProcessPaymentAsync**");
-        }
-
-        [Fact]
         public Task NoOverride_CallAsync_ShouldThrow()
         {
             // Arrange
@@ -230,8 +189,7 @@ namespace VirtoCommerce.Payment.Tests
 
             // Act & Assert
             var action = async () => await method.ProcessPaymentAsync(request);
-            return action.Should().ThrowAsync<NotImplementedException>()
-                .WithMessage("Override*ProcessPayment*ProcessPaymentAsync*");
+            return action.Should().ThrowAsync<NotImplementedException>();
         }
 
         #endregion
@@ -250,83 +208,6 @@ namespace VirtoCommerce.Payment.Tests
             // Act & Assert
             var action = async () => await method.ProcessPaymentAsync(request, cts.Token);
             return action.Should().ThrowAsync<TaskCanceledException>();
-        }
-
-        #endregion
-
-        #region Cache Tests
-
-        [Fact]
-        public void OverrideCheck_MultipleCalls_ShouldBeCached()
-        {
-            // Arrange
-            var method1 = new SyncOnlyPaymentMethod();
-            var method2 = new SyncOnlyPaymentMethod();
-            var request = new ProcessPaymentRequest();
-
-            // Act - call multiple times
-            method1.ProcessPayment(request);
-            method1.ProcessPayment(request);
-            method2.ProcessPayment(request);
-
-            method1.SyncMethodCalled.Should().BeTrue();
-            method2.SyncMethodCalled.Should().BeTrue();
-        }
-
-        [Fact]
-        public void OverrideCheck_DifferentTypes_ShouldCacheSeparately()
-        {
-            // Arrange
-            var syncMethod = new SyncOnlyPaymentMethod();
-            var asyncMethod = new AsyncOnlyPaymentMethod();
-            var request = new ProcessPaymentRequest();
-
-            // Act
-            syncMethod.ProcessPayment(request);
-            asyncMethod.ProcessPayment(request);
-
-            // Assert - each should use correct path
-            syncMethod.SyncMethodCalled.Should().BeTrue();
-            asyncMethod.AsyncMethodCalled.Should().BeTrue();
-        }
-
-        #endregion
-
-        #region No Recursion Tests
-
-        [Fact]
-        public void SyncOnly_NoInfiniteRecursion_WhenCalledFromAsync()
-        {
-            // Arrange
-            var method = new SyncOnlyPaymentMethod();
-            var request = new ProcessPaymentRequest();
-
-            // Override to count calls (in real scenario this is the user's override)
-            // Here we just verify we get a result without stack overflow
-
-            // Act
-#pragma warning disable xUnit1031 // Do not use blocking task operations in test method
-            var result = method.ProcessPaymentAsync(request).GetAwaiter().GetResult();
-#pragma warning restore xUnit1031 // Do not use blocking task operations in test method
-
-            // Assert - should complete without stack overflow
-            result.Should().NotBeNull();
-            result.IsSuccess.Should().BeTrue();
-        }
-
-        [Fact]
-        public void AsyncOnly_NoInfiniteRecursion_WhenCalledFromSync()
-        {
-            // Arrange
-            var method = new AsyncOnlyPaymentMethod();
-            var request = new ProcessPaymentRequest();
-
-            // Act - this would cause infinite loop in naive implementation
-            var result = method.ProcessPayment(request);
-
-            // Assert - should complete without stack overflow
-            result.Should().NotBeNull();
-            result.IsSuccess.Should().BeTrue();
         }
 
         #endregion

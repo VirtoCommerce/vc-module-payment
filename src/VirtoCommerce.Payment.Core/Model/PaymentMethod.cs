@@ -106,33 +106,30 @@ namespace VirtoCommerce.PaymentModule.Core.Model
         /// Method that contains logic of registration payment in external payment system
         /// </summary>
         /// <returns>Result of registration payment in external payment system</returns>
+        [Obsolete("Use ProcessPaymentAsync instead.", DiagnosticId = "VC0012", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
         public virtual ProcessPaymentRequestResult ProcessPayment(ProcessPaymentRequest request)
         {
-            ThrowIfSyncAndAsyncMethodsAreNotOverridden(nameof(ProcessPayment), nameof(ProcessPaymentAsync));
-
-            return ProcessPaymentAsync(request).GetAwaiter().GetResult();
+            throw new NotImplementedException();
         }
 
         /// <summary>
         /// Method that contains logic of checking payment status of payment in external payment system
         /// </summary>
         /// <returns>Result of checking payment in external payment system</returns>
+        [Obsolete("Use PostProcessPaymentAsync instead.", DiagnosticId = "VC0012", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
         public virtual PostProcessPaymentRequestResult PostProcessPayment(PostProcessPaymentRequest request)
         {
-            ThrowIfSyncAndAsyncMethodsAreNotOverridden(nameof(PostProcessPayment), nameof(PostProcessPaymentAsync));
-
-            return PostProcessPaymentAsync(request).GetAwaiter().GetResult();
+            throw new NotImplementedException();
         }
 
         /// <summary>
         /// Voids the payment
         /// </summary>
         /// <returns>Result of voiding payment in external payment system</returns>
+        [Obsolete("Use VoidProcessPaymentAsync instead.", DiagnosticId = "VC0012", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
         public virtual VoidPaymentRequestResult VoidProcessPayment(VoidPaymentRequest request)
         {
-            ThrowIfSyncAndAsyncMethodsAreNotOverridden(nameof(VoidProcessPayment), nameof(VoidProcessPaymentAsync));
-
-            return VoidProcessPaymentAsync(request).GetAwaiter().GetResult();
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -140,11 +137,10 @@ namespace VirtoCommerce.PaymentModule.Core.Model
         /// </summary>
         /// <param name="context"></param>
         /// <returns>Result of capturing payment in external system</returns>
+        [Obsolete("Use CaptureProcessPaymentAsync instead.", DiagnosticId = "VC0012", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
         public virtual CapturePaymentRequestResult CaptureProcessPayment(CapturePaymentRequest request)
         {
-            ThrowIfSyncAndAsyncMethodsAreNotOverridden(nameof(CaptureProcessPayment), nameof(CaptureProcessPaymentAsync));
-
-            return CaptureProcessPaymentAsync(request).GetAwaiter().GetResult();
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -152,11 +148,10 @@ namespace VirtoCommerce.PaymentModule.Core.Model
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
+        [Obsolete("Use RefundProcessPaymentAsync instead.", DiagnosticId = "VC0012", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
         public virtual RefundPaymentRequestResult RefundProcessPayment(RefundPaymentRequest request)
         {
-            ThrowIfSyncAndAsyncMethodsAreNotOverridden(nameof(RefundProcessPayment), nameof(RefundProcessPaymentAsync));
-
-            return RefundProcessPaymentAsync(request).GetAwaiter().GetResult();
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -164,11 +159,11 @@ namespace VirtoCommerce.PaymentModule.Core.Model
         /// </summary>
         /// <param name="queryString">Query string of payment push request (external payment system or storefront)</param>
         /// <returns>Validation result</returns>
+        [Obsolete("Use ValidatePostProcessRequestAsync instead.", DiagnosticId = "VC0012", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
+
         public virtual ValidatePostProcessRequestResult ValidatePostProcessRequest(NameValueCollection queryString)
         {
-            ThrowIfSyncAndAsyncMethodsAreNotOverridden(nameof(ValidatePostProcessRequest), nameof(ValidatePostProcessRequestAsync));
-
-            return ValidatePostProcessRequestAsync(queryString).GetAwaiter().GetResult();
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -179,7 +174,9 @@ namespace VirtoCommerce.PaymentModule.Core.Model
         /// <returns></returns>
         public virtual Task<ProcessPaymentRequestResult> ProcessPaymentAsync(ProcessPaymentRequest request, CancellationToken cancellationToken = default)
         {
+#pragma warning disable VC0012 // Type or member is obsolete
             return Task.FromResult(ProcessPayment(request));
+#pragma warning restore VC0012 // Type or member is obsolete
         }
 
         /// <summary>
@@ -190,42 +187,39 @@ namespace VirtoCommerce.PaymentModule.Core.Model
         /// <returns></returns>
         public virtual Task<PostProcessPaymentRequestResult> PostProcessPaymentAsync(PostProcessPaymentRequest request, CancellationToken cancellationToken = default)
         {
+#pragma warning disable VC0012 // Type or member is obsolete
             return Task.FromResult(PostProcessPayment(request));
+#pragma warning restore VC0012 // Type or member is obsolete
         }
 
         public virtual Task<VoidPaymentRequestResult> VoidProcessPaymentAsync(VoidPaymentRequest request, CancellationToken cancellationToken = default)
         {
+#pragma warning disable VC0012 // Type or member is obsolete
             return Task.FromResult(VoidProcessPayment(request));
+#pragma warning restore VC0012 // Type or member is obsolete
         }
 
         public virtual Task<CapturePaymentRequestResult> CaptureProcessPaymentAsync(CapturePaymentRequest request, CancellationToken cancellationToken = default)
         {
+#pragma warning disable VC0012 // Type or member is obsolete
             return Task.FromResult(CaptureProcessPayment(request));
+#pragma warning restore VC0012 // Type or member is obsolete
         }
 
         public virtual Task<RefundPaymentRequestResult> RefundProcessPaymentAsync(RefundPaymentRequest request, CancellationToken cancellationToken = default)
         {
+#pragma warning disable VC0012 // Type or member is obsolete
             return Task.FromResult(RefundProcessPayment(request));
+#pragma warning restore VC0012 // Type or member is obsolete
         }
 
         public virtual Task<ValidatePostProcessRequestResult> ValidatePostProcessRequestAsync(NameValueCollection queryString, CancellationToken cancellationToken = default)
         {
+#pragma warning disable VC0012 // Type or member is obsolete
             return Task.FromResult(ValidatePostProcessRequest(queryString));
+#pragma warning restore VC0012 // Type or member is obsolete
         }
-
-        protected void ThrowIfSyncAndAsyncMethodsAreNotOverridden(string syncMethodName, string asyncMethodName)
-        {
-            var derivedType = GetType();
-            var syncMethod = derivedType.GetMethod(syncMethodName, BindingFlags.Public | BindingFlags.Instance);
-            var asyncMethod = derivedType.GetMethod(asyncMethodName, BindingFlags.Public | BindingFlags.Instance);
-
-            if (syncMethod?.DeclaringType == typeof(PaymentMethod) && asyncMethod?.DeclaringType == typeof(PaymentMethod))
-            {
-                throw new NotImplementedException($"Override {syncMethodName} or {asyncMethodName} in your payment method.");
-            }
-        }
-
-
+        
         #region ICloneable members
 
         public virtual object Clone()
