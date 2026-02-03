@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Specialized;
+using System.Threading;
+using System.Threading.Tasks;
 using VirtoCommerce.PaymentModule.Core.Model;
 using VirtoCommerce.PaymentModule.Model.Requests;
 
@@ -15,49 +18,51 @@ namespace VirtoCommerce.PaymentModule.Data
 
         public override PaymentMethodGroupType PaymentMethodGroupType => PaymentMethodGroupType.Manual;
 
-        public override ProcessPaymentRequestResult ProcessPayment(ProcessPaymentRequest request)
+        public override Task<ProcessPaymentRequestResult> ProcessPaymentAsync(ProcessPaymentRequest request, CancellationToken cancellationToken = default)
         {
-            //TODO
             //context.Payment.PaymentStatus = PaymentStatus.Paid;
             //context.Payment.OuterId = context.Payment.Number;
             //context.Payment.CapturedDate = DateTime.UtcNow;
             //         context.Payment.IsApproved = true;
-            return new ProcessPaymentRequestResult { IsSuccess = true, NewPaymentStatus = PaymentStatus.Paid };
+            var result = new ProcessPaymentRequestResult { IsSuccess = true, NewPaymentStatus = PaymentStatus.Paid };
+            return Task.FromResult(result);
         }
 
-        public override PostProcessPaymentRequestResult PostProcessPayment(PostProcessPaymentRequest request)
+        public override Task<PostProcessPaymentRequestResult> PostProcessPaymentAsync(PostProcessPaymentRequest request, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }
 
-        public override VoidPaymentRequestResult VoidProcessPayment(VoidPaymentRequest request)
+        public override Task<VoidPaymentRequestResult> VoidProcessPaymentAsync(VoidPaymentRequest request, CancellationToken cancellationToken = default)
         {
-            //TODO
             //context.Payment.IsApproved = false;
             //context.Payment.PaymentStatus = PaymentStatus.Voided;
             //context.Payment.VoidedDate = DateTime.UtcNow;
             //context.Payment.IsCancelled = true;
             //context.Payment.CancelledDate = DateTime.UtcNow;
-            return new VoidPaymentRequestResult { IsSuccess = true, NewPaymentStatus = PaymentStatus.Voided };
+            var result = new VoidPaymentRequestResult { IsSuccess = true, NewPaymentStatus = PaymentStatus.Voided };
+            return Task.FromResult(result);
         }
 
-        public override CapturePaymentRequestResult CaptureProcessPayment(CapturePaymentRequest request)
+        public override Task<CapturePaymentRequestResult> CaptureProcessPaymentAsync(CapturePaymentRequest request, CancellationToken cancellationToken = default)
         {
-            //TODO
             //context.Payment.IsApproved = true;
             //context.Payment.PaymentStatus = PaymentStatus.Paid;
             //context.Payment.VoidedDate = DateTime.UtcNow;
-            return new CapturePaymentRequestResult { IsSuccess = true, NewPaymentStatus = PaymentStatus.Paid };
+            var result = new CapturePaymentRequestResult { IsSuccess = true, NewPaymentStatus = PaymentStatus.Paid };
+            return Task.FromResult(result);
         }
 
-        public override RefundPaymentRequestResult RefundProcessPayment(RefundPaymentRequest request)
+        public override Task<RefundPaymentRequestResult> RefundProcessPaymentAsync(RefundPaymentRequest request, CancellationToken cancellationToken = default)
         {
-            return new RefundPaymentRequestResult { IsSuccess = true, NewRefundStatus = RefundStatus.Processed };
+            var result = new RefundPaymentRequestResult { IsSuccess = true, NewRefundStatus = RefundStatus.Processed };
+            return Task.FromResult(result);
         }
 
-        public override ValidatePostProcessRequestResult ValidatePostProcessRequest(System.Collections.Specialized.NameValueCollection queryString)
+        public override Task<ValidatePostProcessRequestResult> ValidatePostProcessRequestAsync(NameValueCollection queryString, CancellationToken cancellationToken = default)
         {
-            return new ValidatePostProcessRequestResult { IsSuccess = false };
+            var result = new ValidatePostProcessRequestResult { IsSuccess = false };
+            return Task.FromResult(result);
         }
     }
 }
