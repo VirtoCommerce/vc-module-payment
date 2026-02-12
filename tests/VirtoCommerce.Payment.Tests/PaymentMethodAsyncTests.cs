@@ -126,7 +126,7 @@ namespace VirtoCommerce.Payment.Tests
             var request = new ProcessPaymentRequest();
 
             // Act
-            var result = await method.ProcessPaymentAsync(request);
+            var result = await method.ProcessPaymentAsync(request, TestContext.Current.CancellationToken);
 
             // Assert
             method.SyncMethodCalled.Should().BeTrue();
@@ -168,7 +168,7 @@ namespace VirtoCommerce.Payment.Tests
             var request = new ProcessPaymentRequest();
 
             // Act
-            var result = await method.ProcessPaymentAsync(request);
+            var result = await method.ProcessPaymentAsync(request, TestContext.Current.CancellationToken);
 
             // Assert
             method.AsyncMethodCalled.Should().BeTrue();
