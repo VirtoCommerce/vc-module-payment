@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <IsPackable>False</IsPackable>
-    <noWarn>1591</noWarn>
+    <noWarn>1591;NU1608</noWarn>
     <OutputType>Library</OutputType>
   </PropertyGroup>
   <ItemGroup>
@@ -17,7 +17,7 @@
     <None Remove="VirtoCommerce.Platform.Core" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="[8.0.11,9)" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="10.0.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\VirtoCommerce.Payment.Core\VirtoCommerce.PaymentModule.Core.csproj" />
