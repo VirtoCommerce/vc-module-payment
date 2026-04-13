@@ -146,6 +146,34 @@ mutation CreateOrderFromCart($command: InputCreateOrderFromCartType!) {
 
 **Important:** Payments are copied to the order but **not processed yet**. The payment status remains `New`.
 
+#### Step 2b: (Alternative) Initialize Payment Before Order Creation (Frontend → x-cart → PaymentMethod)
+
+For payment gateways that must open a session or widget **before** the order is persisted — e.g. Datatrans Lightbox, Klarna widgets, or any flow that needs a gateway-side transaction ID while the user is still on the cart — the frontend calls `initializeCartPayment` on the cart:
+
+```graphql
+mutation InitializeCartPayment($command: InputInitializeCartPaymentType!) {
+  initializeCartPayment(command: $command) {
+    isSuccess
+    errorMessage
+    paymentActionType
+    actionRedirectUrl
+    actionHtmlForm
+    publicParameters { key value }
+    paymentMethodCode
+  }
+}
+```
+
+**x-cart internals:** `InitializeCartPaymentCommandHandler` loads the cart aggregate, resolves the `PaymentMethod` via `ICartAvailMethodsService`, and calls **`PaymentMethod.ProcessPaymentAsync(request)`** with the cart context. The resulting tokens/redirect URL are returned to the frontend to open the widget.
+
+**Important differences vs. order-based `initializePayment`:**
+
+- `request.Store` and `request.Payment` are set, but `request.Order` is **null** — no order exists yet. Providers that need a reference number should read `request.Parameters["CartId"]` (and `"Amount"`, `"Currency"`, which the handler populates).
+- Only payment methods with `AllowCartPayment = true` are eligible; otherwise the handler throws.
+- This step does NOT save the cart.
+
+The frontend then calls `createOrderFromCart` and `authorizePayment` as usual (steps 2 and 5 below). The gateway's transaction ID obtained here is typically reused on the order side.
+
 #### Step 3: Initialize Payment (Frontend → x-order → PaymentMethod)
 
 The frontend calls `initializePayment` with the `orderId` and `paymentId`:
@@ -240,7 +268,7 @@ Every payment method extends the abstract `PaymentMethod` class and overrides th
 
 | Method | Purpose | Called By | When |
 |--------|---------|-----------|------|
-| `ProcessPaymentAsync` | Initialize payment with gateway. Return redirect URL, HTML form, public parameters, or just success. | `initializePayment` mutation | After order is created, before user pays |
+| `ProcessPaymentAsync` | Initialize payment with gateway. Return redirect URL, HTML form, public parameters, or just success. | `initializePayment` (order) or `initializeCartPayment` (cart) mutation | After order is created, before user pays — or on the cart before order creation for widget/lightbox flows |
 | `ValidatePostProcessRequestAsync` | Validate callback parameters from the gateway (signatures, tokens). | `authorizePayment` mutation | When user returns from external gateway |
 | `PostProcessPaymentAsync` | Finalize payment: confirm authorization, verify payment, update status. | `authorizePayment` mutation | After callback validation succeeds |
 | `CaptureProcessPaymentAsync` | Capture authorized funds (full or partial). | Back-office | After authorization, when ready to settle |
@@ -525,15 +553,19 @@ public class Module : IModule, IHasConfiguration
 
 4. **Cloned objects in request.** The XAPI layer may clone `request.Order` and `request.Payment` before passing them to your method. Write results to the result object, not directly to the request objects. The XAPI handler reads `result.NewPaymentStatus`, `result.OuterId`, etc. and applies them to the real entities.
 
-5. **`initializePayment` does NOT save.** It's read-only. Only `authorizePayment` persists status changes. Design accordingly.
+5. **`initializePayment` does NOT save.** It's read-only. Only `authorizePayment` persists status changes. Design accordingly. The same applies to `initializeCartPayment`.
 
-6. **Single-message vs. Dual-message.** If your gateway supports both:
+6. **Localization context.** `PaymentRequestBase.CultureName` carries the shopper's current culture (e.g. `en-US`) into every lifecycle call. It is populated by the X-API handlers from the mutation input when provided, otherwise from `Store.DefaultLanguage`. Use this to localize hosted widgets, error messages, and email receipts when the gateway supports it.
+
+7. **Store validation.** `initializePayment`, `initializeCartPayment`, and `authorizePayment` accept an optional `storeId` input. When supplied, X-API verifies it matches the order/cart's store and throws otherwise — use this in the storefront to fail fast on cross-store requests.
+
+8. **Single-message vs. Dual-message.** If your gateway supports both:
    - **Single-message** (auth + capture in one call): Set `NewPaymentStatus = PaymentStatus.Paid` in `PostProcessPaymentAsync`.
    - **Dual-message** (auth first, capture later): Set `NewPaymentStatus = PaymentStatus.Authorized` in `PostProcessPaymentAsync`. Implement `ISupportCaptureFlow` for the separate capture step.
 
-7. **Gateway credentials** should go in `appsettings.json` (via `IOptions<T>`), not in module settings. Use module settings for user-facing toggles (sandbox mode, payment mode, accepted card types).
+9. **Gateway credentials** should go in `appsettings.json` (via `IOptions<T>`), not in module settings. Use module settings for user-facing toggles (sandbox mode, payment mode, accepted card types).
 
-8. **Validation status rules:**
+10. **Validation status rules:**
    - `ProcessPaymentAsync` is called when payment status is `New` or `Custom`.
    - `PostProcessPaymentAsync` is called when payment status is NOT `Paid`.
    - Always set `NewPaymentStatus` in your result — the XAPI uses it to update the persisted status.
