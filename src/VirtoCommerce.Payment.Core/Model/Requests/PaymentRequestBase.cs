@@ -16,6 +16,8 @@ namespace VirtoCommerce.PaymentModule.Model.Requests
 
         public string OuterId { get; set; }
 
+        public string CultureName { get; set; }
+
         public NameValueCollection Parameters { get; set; }
     }
 }
