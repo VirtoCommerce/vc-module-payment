@@ -75,7 +75,9 @@ namespace VirtoCommerce.PaymentModule.Data.Services
             return _settingManager.DeepRemoveSettingsAsync(models);
         }
 
+#pragma warning disable CS0672 // Member overrides obsolete member
         protected override PaymentMethod ToModel(StorePaymentMethodEntity entity)
+#pragma warning restore CS0672 // Member overrides obsolete member
         {
             // Publish this event in case there are modules that need some special work done before instancing a payment method.
             // For example, NativePaymentMethods registers its payment methods.
