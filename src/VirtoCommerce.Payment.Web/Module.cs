@@ -1,4 +1,5 @@
-using System;
+using System;
+using System.Threading;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
@@ -101,14 +102,14 @@ namespace VirtoCommerce.PaymentModule.Web
         }
 
         public async Task ExportAsync(Stream outStream, ExportImportOptions options, Action<ExportImportProgressInfo> progressCallback,
-            ICancellationToken cancellationToken)
+            CancellationToken cancellationToken)
         {
             await _appBuilder.ApplicationServices.GetRequiredService<PaymentExportImport>().DoExportAsync(outStream,
                 progressCallback, cancellationToken);
         }
 
         public async Task ImportAsync(Stream inputStream, ExportImportOptions options, Action<ExportImportProgressInfo> progressCallback,
-            ICancellationToken cancellationToken)
+            CancellationToken cancellationToken)
         {
             await _appBuilder.ApplicationServices.GetRequiredService<PaymentExportImport>().DoImportAsync(inputStream,
                 progressCallback, cancellationToken);
