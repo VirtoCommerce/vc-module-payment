@@ -1,4 +1,5 @@
-using System;
+using System;
+
 using System.Threading;
 using System.IO;
 using System.Threading.Tasks;
@@ -38,12 +39,12 @@ namespace VirtoCommerce.PaymentModule.Data.ExportImport
             using (var sw = new StreamWriter(outStream))
             using (var writer = new JsonTextWriter(sw))
             {
-                await writer.WriteStartObjectAsync();
+                await writer.WriteStartObjectAsync(cancellationToken);
 
                 progressInfo.Description = "Payment methods are started to export";
                 progressCallback(progressInfo);
 
-                await writer.WritePropertyNameAsync("PaymentMethods");
+                await writer.WritePropertyNameAsync("PaymentMethods", cancellationToken);
                 await writer.SerializeArrayWithPagingAsync(_jsonSerializer, _batchSize, async (skip, take) =>
                 {
                     var searchCriteria = AbstractTypeFactory<PaymentMethodsSearchCriteria>.TryCreateInstance();
@@ -58,8 +59,8 @@ namespace VirtoCommerce.PaymentModule.Data.ExportImport
                     progressCallback(progressInfo);
                 }, cancellationToken);
 
-                await writer.WriteEndObjectAsync();
-                await writer.FlushAsync();
+                await writer.WriteEndObjectAsync(cancellationToken);
+                await writer.FlushAsync(cancellationToken);
             }
         }
 
@@ -72,7 +73,7 @@ namespace VirtoCommerce.PaymentModule.Data.ExportImport
             using (var streamReader = new StreamReader(inputStream))
             using (var reader = new JsonTextReader(streamReader))
             {
-                while (await reader.ReadAsync())
+                while (await reader.ReadAsync(cancellationToken))
                 {
                     if (reader.TokenType == JsonToken.PropertyName)
                     {
