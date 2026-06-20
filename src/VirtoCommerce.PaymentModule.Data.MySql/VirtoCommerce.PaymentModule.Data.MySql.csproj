@@ -11,7 +11,7 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     
-    <PackageReference Include="VirtoCommerce.Platform.Data.MySql" Version="3.1007.10" />
+    <PackageReference Include="VirtoCommerce.Platform.Data.MySql" Version="3.1039.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\VirtoCommerce.Payment.Data\VirtoCommerce.PaymentModule.Data.csproj" />
