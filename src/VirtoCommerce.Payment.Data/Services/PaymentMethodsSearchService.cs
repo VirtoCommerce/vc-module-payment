@@ -20,6 +20,8 @@ namespace VirtoCommerce.PaymentModule.Data.Services
 {
     public class PaymentMethodsSearchService : SearchService<PaymentMethodsSearchCriteria, PaymentMethodsSearchResult, PaymentMethod, StorePaymentMethodEntity>, IPaymentMethodsSearchService
     {
+        protected const string DefaultSortColumn = nameof(StorePaymentMethodEntity.Code);
+
         private readonly ISettingsManager _settingsManager;
         private readonly IEventPublisher _eventPublisher;
 
@@ -79,11 +81,18 @@ namespace VirtoCommerce.PaymentModule.Data.Services
             {
                 sortInfos = new[]
                 {
-                    new SortInfo{ SortColumn = nameof(StorePaymentMethodEntity.Code) }
+                    new SortInfo{ SortColumn = DefaultSortColumn }
                 };
             }
 
             return sortInfos;
+        }
+
+        protected static bool IsSingleAscendingDefaultSort(IList<SortInfo> sortInfos)
+        {
+            return sortInfos?.Count == 1
+                && sortInfos[0].SortDirection == SortDirection.Ascending
+                && DefaultSortColumn.EqualsIgnoreCase(sortInfos[0].SortColumn);
         }
 
         protected override async Task<PaymentMethodsSearchResult> ProcessSearchResultAsync(PaymentMethodsSearchResult result, PaymentMethodsSearchCriteria criteria)
@@ -134,12 +143,14 @@ namespace VirtoCommerce.PaymentModule.Data.Services
 
                 var allMethods = result.Results.Concat(pagedTransientMethods);
 
-                // The default sort (no explicit criteria.SortInfos) is a single ascending Code
-                // column — order it without the expression-based IQueryable path; arbitrary sort
-                // columns only occur on cold (admin) requests and keep the generic path.
-                result.Results = criteria.SortInfos.IsNullOrEmpty()
+                var sortInfos = BuildSortExpression(criteria);
+
+                // Arbitrary sort columns (admin, cold) are worth OrderBySortInfos' compile; the default
+                // order is not. Decided from what BuildSortExpression returned, so overriding that seam
+                // still changes the sort.
+                result.Results = IsSingleAscendingDefaultSort(sortInfos)
                     ? allMethods.OrderBy(x => x.Code).ToList()
-                    : allMethods.AsQueryable().OrderBySortInfos(BuildSortExpression(criteria)).ToList();
+                    : allMethods.AsQueryable().OrderBySortInfos(sortInfos).ToList();
             }
 
             return result;
