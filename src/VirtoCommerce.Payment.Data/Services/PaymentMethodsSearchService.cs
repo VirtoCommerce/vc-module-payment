@@ -98,33 +98,48 @@ namespace VirtoCommerce.PaymentModule.Data.Services
 
             if (criteria.Take > 0 && !criteria.WithoutTransient)
             {
-                var transientMethodsQuery = AbstractTypeFactory<PaymentMethod>.AllTypeInfos
-                    .Select(x => AbstractTypeFactory<PaymentMethod>.TryCreateInstance(x.Type.Name))
-                    .AsQueryable();
+                // Plain LINQ-to-objects: composing operators on an in-memory IQueryable
+                // (EnumerableQuery) rebuilds and compiles an expression tree on every
+                // enumeration; this method runs on every cart/checkout read, and the per-call
+                // compilation convoys on runtime-wide locks under concurrent requests.
+                var transientMethods = AbstractTypeFactory<PaymentMethod>.AllTypeInfos
+                    .Select(x => AbstractTypeFactory<PaymentMethod>.TryCreateInstance(x.Type.Name));
 
                 if (!string.IsNullOrEmpty(criteria.Keyword))
                 {
-                    transientMethodsQuery = transientMethodsQuery.Where(x => x.Code.Contains(criteria.Keyword));
+                    transientMethods = transientMethods.Where(x => x.Code.Contains(criteria.Keyword));
                 }
 
                 if (criteria.IsActive.HasValue)
                 {
-                    transientMethodsQuery = transientMethodsQuery.Where(x => x.IsActive == criteria.IsActive.Value);
+                    transientMethods = transientMethods.Where(x => x.IsActive == criteria.IsActive.Value);
                 }
 
-                var allPersistentTypes = result.Results.Select(x => x.GetType()).Distinct();
-                transientMethodsQuery = transientMethodsQuery.Where(x => !allPersistentTypes.Contains(x.GetType()));
+                var persistentMethodTypes = result.Results.Select(x => x.GetType()).ToHashSet();
+                var filteredTransientMethods = transientMethods
+                    .Where(x => !persistentMethodTypes.Contains(x.GetType()))
+                    .ToList();
 
-                result.TotalCount += transientMethodsQuery.Count();
-                var transientProviders = transientMethodsQuery.Skip(criteria.Skip).Take(criteria.Take).ToList();
+                result.TotalCount += filteredTransientMethods.Count;
 
-                foreach (var transientProvider in transientProviders)
+                var pagedTransientMethods = filteredTransientMethods
+                    .Skip(criteria.Skip)
+                    .Take(criteria.Take)
+                    .ToList();
+
+                foreach (var transientMethod in pagedTransientMethods)
                 {
-                    await _settingsManager.DeepLoadSettingsAsync(transientProvider);
+                    await _settingsManager.DeepLoadSettingsAsync(transientMethod);
                 }
 
-                var sortInfos = BuildSortExpression(criteria);
-                result.Results = result.Results.Concat(transientProviders).AsQueryable().OrderBySortInfos(sortInfos).ToList();
+                var allMethods = result.Results.Concat(pagedTransientMethods);
+
+                // The default sort (no explicit criteria.SortInfos) is a single ascending Code
+                // column — order it without the expression-based IQueryable path; arbitrary sort
+                // columns only occur on cold (admin) requests and keep the generic path.
+                result.Results = criteria.SortInfos.IsNullOrEmpty()
+                    ? allMethods.OrderBy(x => x.Code).ToList()
+                    : allMethods.AsQueryable().OrderBySortInfos(BuildSortExpression(criteria)).ToList();
             }
 
             return result;
