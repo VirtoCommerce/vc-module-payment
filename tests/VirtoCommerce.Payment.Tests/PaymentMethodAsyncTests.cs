@@ -13,26 +13,7 @@ namespace VirtoCommerce.Payment.Tests
         #region Test Payment Method Implementations
 
         /// <summary>
-        /// Legacy: Only sync method overridden
-        /// </summary>
-        private class SyncOnlyPaymentMethod : PaymentMethod
-        {
-            public SyncOnlyPaymentMethod() : base("SyncOnly") { }
-            public override PaymentMethodType PaymentMethodType => PaymentMethodType.Standard;
-            public override PaymentMethodGroupType PaymentMethodGroupType => PaymentMethodGroupType.Manual;
-
-            public bool SyncMethodCalled { get; private set; }
-
-            [Obsolete]
-            public override ProcessPaymentRequestResult ProcessPayment(ProcessPaymentRequest request)
-            {
-                SyncMethodCalled = true;
-                return new ProcessPaymentRequestResult { IsSuccess = true, OuterId = "sync_123" };
-            }
-        }
-
-        /// <summary>
-        /// Modern: Only async method overridden
+        /// Async method overridden
         /// </summary>
         private class AsyncOnlyPaymentMethod : PaymentMethod
         {
@@ -55,38 +36,6 @@ namespace VirtoCommerce.Payment.Tests
         }
 
         /// <summary>
-        /// Both methods overridden
-        /// </summary>
-        private class BothOverriddenPaymentMethod : PaymentMethod
-        {
-            public BothOverriddenPaymentMethod() : base("Both") { }
-            public override PaymentMethodType PaymentMethodType => PaymentMethodType.Standard;
-            public override PaymentMethodGroupType PaymentMethodGroupType => PaymentMethodGroupType.Manual;
-
-            public bool SyncMethodCalled { get; private set; }
-            public bool AsyncMethodCalled { get; private set; }
-
-            [Obsolete]
-            public override ProcessPaymentRequestResult ProcessPayment(ProcessPaymentRequest request)
-            {
-                SyncMethodCalled = true;
-                return new ProcessPaymentRequestResult { IsSuccess = true, OuterId = "both_sync" };
-            }
-
-            public override Task<ProcessPaymentRequestResult> ProcessPaymentAsync(
-                ProcessPaymentRequest request,
-                CancellationToken cancellationToken = default)
-            {
-                AsyncMethodCalled = true;
-                return Task.FromResult(new ProcessPaymentRequestResult
-                {
-                    IsSuccess = true,
-                    OuterId = "both_async"
-                });
-            }
-        }
-
-        /// <summary>
         /// Nothing overridden - should throw
         /// </summary>
         private class NoOverridePaymentMethod : PaymentMethod
@@ -94,44 +43,6 @@ namespace VirtoCommerce.Payment.Tests
             public NoOverridePaymentMethod() : base("NoOverride") { }
             public override PaymentMethodType PaymentMethodType => PaymentMethodType.Standard;
             public override PaymentMethodGroupType PaymentMethodGroupType => PaymentMethodGroupType.Manual;
-        }
-
-        #endregion
-
-        #region Sync-Only Tests
-
-        [Fact]
-        public void SyncOnly_CallSync_ShouldCallSyncMethod()
-        {
-            // Arrange
-            var method = new SyncOnlyPaymentMethod();
-            var request = new ProcessPaymentRequest();
-
-            // Act
-#pragma warning disable VC0012 // Type or member is obsolete
-            var result = method.ProcessPayment(request);
-#pragma warning restore VC0012 // Type or member is obsolete
-
-            // Assert
-            method.SyncMethodCalled.Should().BeTrue();
-            result.IsSuccess.Should().BeTrue();
-            result.OuterId.Should().Be("sync_123");
-        }
-
-        [Fact]
-        public async Task SyncOnly_CallAsync_ShouldRoutToSyncMethod()
-        {
-            // Arrange
-            var method = new SyncOnlyPaymentMethod();
-            var request = new ProcessPaymentRequest();
-
-            // Act
-            var result = await method.ProcessPaymentAsync(request, TestContext.Current.CancellationToken);
-
-            // Assert
-            method.SyncMethodCalled.Should().BeTrue();
-            result.IsSuccess.Should().BeTrue();
-            result.OuterId.Should().Be("sync_123");
         }
 
         #endregion
@@ -154,26 +65,6 @@ namespace VirtoCommerce.Payment.Tests
             method.ReceivedToken.Should().Be(cts.Token);
             result.IsSuccess.Should().BeTrue();
             result.OuterId.Should().Be("async_456");
-        }
-
-        #endregion
-
-        #region Both-Overridden Tests
-
-        [Fact]
-        public async Task Both_CallAsync_ShouldCallAsyncDirectly()
-        {
-            // Arrange
-            var method = new BothOverriddenPaymentMethod();
-            var request = new ProcessPaymentRequest();
-
-            // Act
-            var result = await method.ProcessPaymentAsync(request, TestContext.Current.CancellationToken);
-
-            // Assert
-            method.AsyncMethodCalled.Should().BeTrue();
-            method.SyncMethodCalled.Should().BeFalse(); // Should NOT call sync
-            result.OuterId.Should().Be("both_async");
         }
 
         #endregion
