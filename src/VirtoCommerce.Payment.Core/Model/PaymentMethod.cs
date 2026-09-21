@@ -102,70 +102,6 @@ namespace VirtoCommerce.PaymentModule.Core.Model
         public abstract PaymentMethodGroupType PaymentMethodGroupType { get; }
 
         /// <summary>
-        /// Method that contains logic of registration payment in external payment system
-        /// </summary>
-        /// <returns>Result of registration payment in external payment system</returns>
-        [Obsolete("Use ProcessPaymentAsync instead.", DiagnosticId = "VC0012", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
-        public virtual ProcessPaymentRequestResult ProcessPayment(ProcessPaymentRequest request)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Method that contains logic of checking payment status of payment in external payment system
-        /// </summary>
-        /// <returns>Result of checking payment in external payment system</returns>
-        [Obsolete("Use PostProcessPaymentAsync instead.", DiagnosticId = "VC0012", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
-        public virtual PostProcessPaymentRequestResult PostProcessPayment(PostProcessPaymentRequest request)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Voids the payment
-        /// </summary>
-        /// <returns>Result of voiding payment in external payment system</returns>
-        [Obsolete("Use VoidProcessPaymentAsync instead.", DiagnosticId = "VC0012", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
-        public virtual VoidPaymentRequestResult VoidProcessPayment(VoidPaymentRequest request)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Capture authorized payment
-        /// </summary>
-        /// <param name="context"></param>
-        /// <returns>Result of capturing payment in external system</returns>
-        [Obsolete("Use CaptureProcessPaymentAsync instead.", DiagnosticId = "VC0012", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
-        public virtual CapturePaymentRequestResult CaptureProcessPayment(CapturePaymentRequest request)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Refund payment
-        /// </summary>
-        /// <param name="request"></param>
-        /// <returns></returns>
-        [Obsolete("Use RefundProcessPaymentAsync instead.", DiagnosticId = "VC0012", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
-        public virtual RefundPaymentRequestResult RefundProcessPayment(RefundPaymentRequest request)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Method that validates parameters in querystring of request to push URL
-        /// </summary>
-        /// <param name="queryString">Query string of payment push request (external payment system or storefront)</param>
-        /// <returns>Validation result</returns>
-        [Obsolete("Use ValidatePostProcessRequestAsync instead.", DiagnosticId = "VC0012", UrlFormat = "https://docs.virtocommerce.org/products/products-virto3-versions")]
-
-        public virtual ValidatePostProcessRequestResult ValidatePostProcessRequest(NameValueCollection queryString)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
         /// Processes the payment asynchronously.
         /// </summary>
         /// <param name="request"></param>
@@ -173,9 +109,7 @@ namespace VirtoCommerce.PaymentModule.Core.Model
         /// <returns></returns>
         public virtual Task<ProcessPaymentRequestResult> ProcessPaymentAsync(ProcessPaymentRequest request, CancellationToken cancellationToken = default)
         {
-#pragma warning disable VC0012 // Type or member is obsolete
-            return Task.FromResult(ProcessPayment(request));
-#pragma warning restore VC0012 // Type or member is obsolete
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -186,37 +120,27 @@ namespace VirtoCommerce.PaymentModule.Core.Model
         /// <returns></returns>
         public virtual Task<PostProcessPaymentRequestResult> PostProcessPaymentAsync(PostProcessPaymentRequest request, CancellationToken cancellationToken = default)
         {
-#pragma warning disable VC0012 // Type or member is obsolete
-            return Task.FromResult(PostProcessPayment(request));
-#pragma warning restore VC0012 // Type or member is obsolete
+            throw new NotImplementedException();
         }
 
         public virtual Task<VoidPaymentRequestResult> VoidProcessPaymentAsync(VoidPaymentRequest request, CancellationToken cancellationToken = default)
         {
-#pragma warning disable VC0012 // Type or member is obsolete
-            return Task.FromResult(VoidProcessPayment(request));
-#pragma warning restore VC0012 // Type or member is obsolete
+            throw new NotImplementedException();
         }
 
         public virtual Task<CapturePaymentRequestResult> CaptureProcessPaymentAsync(CapturePaymentRequest request, CancellationToken cancellationToken = default)
         {
-#pragma warning disable VC0012 // Type or member is obsolete
-            return Task.FromResult(CaptureProcessPayment(request));
-#pragma warning restore VC0012 // Type or member is obsolete
+            throw new NotImplementedException();
         }
 
         public virtual Task<RefundPaymentRequestResult> RefundProcessPaymentAsync(RefundPaymentRequest request, CancellationToken cancellationToken = default)
         {
-#pragma warning disable VC0012 // Type or member is obsolete
-            return Task.FromResult(RefundProcessPayment(request));
-#pragma warning restore VC0012 // Type or member is obsolete
+            throw new NotImplementedException();
         }
 
         public virtual Task<ValidatePostProcessRequestResult> ValidatePostProcessRequestAsync(NameValueCollection queryString, CancellationToken cancellationToken = default)
         {
-#pragma warning disable VC0012 // Type or member is obsolete
-            return Task.FromResult(ValidatePostProcessRequest(queryString));
-#pragma warning restore VC0012 // Type or member is obsolete
+            throw new NotImplementedException();
         }
         
         #region ICloneable members
