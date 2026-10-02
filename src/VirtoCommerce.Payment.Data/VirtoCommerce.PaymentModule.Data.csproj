@@ -10,7 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     
-    <PackageReference Include="VirtoCommerce.Platform.Data" Version="3.1039.0" />
+    <PackageReference Include="VirtoCommerce.Platform.Data" Version="3.1076.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\VirtoCommerce.Payment.Core\VirtoCommerce.PaymentModule.Core.csproj" />
