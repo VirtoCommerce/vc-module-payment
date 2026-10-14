@@ -26,4 +26,17 @@
     <ProjectReference Include="..\VirtoCommerce.PaymentModule.Data.PostgreSql\VirtoCommerce.PaymentModule.Data.PostgreSql.csproj" />
     <ProjectReference Include="..\VirtoCommerce.PaymentModule.Data.SqlServer\VirtoCommerce.PaymentModule.Data.SqlServer.csproj" />
   </ItemGroup>
+  <!-- Admin Shell plugin: Vue sources in vue/, built into plugins/admin-shell/ -->
+  <ItemGroup>
+    <Compile Remove="vue\**" />
+    <Content Remove="vue\**" />
+    <EmbeddedResource Remove="vue\**" />
+    <None Remove="vue\**" />
+    <Content Remove="plugins\**" />
+    <None Remove="plugins\**" />
+    <AdminShellPlugin Include="plugins\**" />
+  </ItemGroup>
+  <Target Name="CopyAdminShellPluginOnPublish" AfterTargets="Publish">
+    <Copy SourceFiles="@(AdminShellPlugin)" DestinationFiles="$(PublishDir)\..\%(Identity)" />
+  </Target>
 </Project>
