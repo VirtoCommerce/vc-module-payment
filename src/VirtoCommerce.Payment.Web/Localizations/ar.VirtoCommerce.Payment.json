@@ -1,0 +1,18 @@
+{
+  "payment": {
+    "labels": {
+      "DefaultManualPaymentMethod": {
+        "name": "طريقة دفع يدوية للاختبار",
+        "description": "طريقة اختبار يدوية، لا تستخدمها في بيئة الإنتاج"
+      }
+    }
+  },
+  "settings": {
+    "VirtoCommerce.Payment.DefaultManualPaymentMethod": {
+      "ExampleSetting": {
+        "title": "إعداد نموذجي",
+        "description": "إعداد نموذجي لطريقة الدفع"
+      }
+    }
+  }
+}
