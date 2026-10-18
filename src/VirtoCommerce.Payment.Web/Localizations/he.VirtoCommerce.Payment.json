@@ -1,5 +1,50 @@
 {
   "payment": {
+    "blades": {
+      "payment-method-detail": {
+        "subtitle": "עריכת אמצעי תשלום",
+        "labels": {
+          "is-active": "פעיל",
+          "is-partial-payments-available": "תשלום חלקי זמין",
+          "allow-deferred-payment": "החלת סטטוס על תשלום שהופסק",
+          "name": "שם",
+          "localized-name": "שם מתורגם",
+          "code": "קוד",
+          "description": "תיאור",
+          "settings": "הגדרות",
+          "logoUrl": "URL של הלוגו",
+          "show-more-languages": "הצגת שפות נוספות",
+          "show-less-languages": "הצגת פחות שפות"
+        },
+        "placeholders": {
+          "localized-name": "יש להזין שם",
+          "description": "יש להזין תיאור"
+        }
+      },
+      "payment-method-list": {
+        "subtitle": "עריכת אמצעי תשלום",
+        "labels": {
+          "is-active": "פעיל",
+          "payment-method": "אמצעי תשלום",
+          "note": "יש לקבוע את הסדר שבו אמצעי התשלום מוצגים בחנות המקוונת. אפשר לשנות את הסדר בגרירה ושחרור"
+        },
+        "placeholders": {
+          "description": "יש להזין תיאור"
+        }
+      }
+    },
+    "dialogs": {
+      "payment-method-save": {
+        "title": "שמירת שינויים",
+        "message": "אמצעי התשלום שונה. לשמור את השינויים?"
+      }
+    },
+    "widgets": {
+      "store-payment-widget": {
+        "title": "אמצעי תשלום",
+        "blade-subtitle": "אמצעי תשלום"
+      }
+    },
     "labels": {
       "DefaultManualPaymentMethod": {
         "name": "אמצעי תשלום ידני לבדיקה",
@@ -13,6 +58,11 @@
         "title": "הגדרה לדוגמה",
         "description": "הגדרה לדוגמה של אמצעי תשלום"
       }
+    }
+  },
+  "module": {
+    "VirtoCommerce.Payment": {
+      "description": "ייצוא/ייבוא של אמצעי תשלום"
     }
   }
 }

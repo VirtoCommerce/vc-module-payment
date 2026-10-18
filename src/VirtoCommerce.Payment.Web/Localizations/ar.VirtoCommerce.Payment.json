@@ -1,5 +1,50 @@
 {
   "payment": {
+    "blades": {
+      "payment-method-detail": {
+        "subtitle": "تحرير طريقة الدفع",
+        "labels": {
+          "is-active": "نشطة",
+          "is-partial-payments-available": "الدفع الجزئي متاح",
+          "allow-deferred-payment": "تطبيق الحالة على الدفعة المُنهاة",
+          "name": "الاسم",
+          "localized-name": "الاسم المترجم",
+          "code": "الرمز",
+          "description": "الوصف",
+          "settings": "الإعدادات",
+          "logoUrl": "عنوان URL للشعار",
+          "show-more-languages": "عرض لغات أكثر",
+          "show-less-languages": "عرض لغات أقل"
+        },
+        "placeholders": {
+          "localized-name": "أدخل الاسم",
+          "description": "أدخل الوصف"
+        }
+      },
+      "payment-method-list": {
+        "subtitle": "تحرير طريقة الدفع",
+        "labels": {
+          "is-active": "نشطة",
+          "payment-method": "طريقة الدفع",
+          "note": "رتّب طرق الدفع بالترتيب الذي تظهر به في المتجر الإلكتروني. استخدم السحب والإفلات لإعادة ترتيبها"
+        },
+        "placeholders": {
+          "description": "أدخل الوصف"
+        }
+      }
+    },
+    "dialogs": {
+      "payment-method-save": {
+        "title": "حفظ التغييرات",
+        "message": "تم تعديل طريقة الدفع. هل تريد حفظ التغييرات؟"
+      }
+    },
+    "widgets": {
+      "store-payment-widget": {
+        "title": "طرق الدفع",
+        "blade-subtitle": "طرق الدفع"
+      }
+    },
     "labels": {
       "DefaultManualPaymentMethod": {
         "name": "طريقة دفع يدوية للاختبار",
@@ -13,6 +58,11 @@
         "title": "إعداد نموذجي",
         "description": "إعداد نموذجي لطريقة الدفع"
       }
+    }
+  },
+  "module": {
+    "VirtoCommerce.Payment": {
+      "description": "تصدير واستيراد طرق الدفع"
     }
   }
 }
