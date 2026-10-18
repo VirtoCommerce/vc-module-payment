@@ -1,0 +1,18 @@
+{
+  "payment": {
+    "labels": {
+      "DefaultManualPaymentMethod": {
+        "name": "אמצעי תשלום ידני לבדיקה",
+        "description": "אמצעי בדיקה ידני, אין להשתמש בו בסביבת ייצור"
+      }
+    }
+  },
+  "settings": {
+    "VirtoCommerce.Payment.DefaultManualPaymentMethod": {
+      "ExampleSetting": {
+        "title": "הגדרה לדוגמה",
+        "description": "הגדרה לדוגמה של אמצעי תשלום"
+      }
+    }
+  }
+}
