@@ -1,0 +1,29 @@
+{
+  "PAYMENT": {
+    "TITLE": "אמצעי תשלום",
+    "EMPTY": "לא נרשמו אמצעי תשלום",
+    "GENERAL": "כללי",
+    "ACTIVE": "פעיל",
+    "INACTIVE": "לא פעיל",
+    "FIELDS": {
+      "LOGO": "לוגו",
+      "NAME": "שם",
+      "CODE": "קוד",
+      "PRIORITY": "עדיפות",
+      "STATUS": "סטטוס",
+      "IS_ACTIVE": "פעיל",
+      "PARTIAL": "זמין לתשלומים חלקיים",
+      "DEFERRED": "אפשור תשלום נדחה",
+      "DESCRIPTION": "תיאור",
+      "LOCALIZED_NAME": "שם מתורגם"
+    },
+    "TOOLBAR": {
+      "REFRESH": "רענון",
+      "SAVE": "שמירה",
+      "RESET": "איפוס"
+    },
+    "ALERTS": {
+      "CLOSE_CONFIRMATION": "יש שינויים שלא נשמרו. לסגור בכל זאת?"
+    }
+  }
+}
