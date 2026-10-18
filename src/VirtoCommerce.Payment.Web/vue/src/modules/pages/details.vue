@@ -100,7 +100,7 @@ import { api } from "../api";
 import ImageField from "../components/ImageField.vue";
 import SettingsEditor from "../components/SettingsEditor.vue";
 import { URL, methodName, type PaymentMethod } from "../methods";
-import { loadLegacyTexts } from "../utils";
+import { useLegacyTexts } from "../utils";
 
 // not routable: the method and its store come only through options, which a page reload doesn't restore
 defineBlade({
@@ -113,7 +113,7 @@ const { t } = useI18n({ useScope: "global" });
 const { options, callParent } = useBlade<{ method?: PaymentMethod; storeId: string }>();
 
 const item = ref<PaymentMethod>(JSON.parse(JSON.stringify(options.value?.method ?? {})));
-const texts = ref<Record<string, unknown>>({});
+const texts = useLegacyTexts();
 const languages = ref<string[]>([]);
 const name = computed(() => methodName(texts.value, item.value));
 
@@ -161,7 +161,6 @@ const bladeToolbar = ref<IBladeToolbar[]>([
 
 onMounted(() =>
   Promise.all([
-    loadLegacyTexts().then((x) => (texts.value = x)),
     load(),
     // the localized names are edited for the store's languages
     options.value?.storeId &&

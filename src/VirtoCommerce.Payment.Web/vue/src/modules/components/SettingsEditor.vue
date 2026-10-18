@@ -72,8 +72,8 @@
 <script setup lang="ts">
 import { VcCard, VcInput, VcSelect, VcSwitch, VcTextarea } from "@vc-shell/framework/ui";
 import { Field } from "vee-validate";
-import { computed, onMounted, ref } from "vue";
-import { legacyText, loadLegacyTexts } from "../utils";
+import { computed } from "vue";
+import { legacyText, useLegacyTexts } from "../utils";
 
 export interface SettingEntry {
   name?: string;
@@ -90,8 +90,7 @@ export interface SettingEntry {
 
 const props = defineProps<{ settings: SettingEntry[] }>();
 
-const texts = ref<Record<string, unknown>>({});
-onMounted(async () => (texts.value = await loadLegacyTexts()));
+const texts = useLegacyTexts();
 
 // "Store|General" → "General"
 const groups = computed(() => {

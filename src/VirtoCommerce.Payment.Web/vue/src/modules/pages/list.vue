@@ -68,7 +68,7 @@ import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { api } from "../api";
 import { URL, methodDescription, methodName, type PaymentMethod } from "../methods";
-import { loadLegacyTexts } from "../utils";
+import { useLegacyTexts } from "../utils";
 
 // The payment methods of a store (param = store id)
 defineBlade({
@@ -82,7 +82,7 @@ const { t } = useI18n({ useScope: "global" });
 const { param, openBlade, callParent, exposeToChildren } = useBlade();
 
 const methods = ref<PaymentMethod[]>([]);
-const texts = ref<Record<string, unknown>>({});
+const texts = useLegacyTexts();
 const activeItemId = ref<string>();
 
 // transient methods (registered, never saved for this store) have no id yet: the code identifies them
@@ -98,11 +98,7 @@ const rows = computed<Row[]>(() =>
 );
 
 const { loading, action: load } = useAsync(async () => {
-  const [result, legacy] = await Promise.all([
-    api.post<{ results?: PaymentMethod[] }>(`${URL}/search`, { storeId: param.value, take: 100 }),
-    loadLegacyTexts(),
-  ]);
-  texts.value = legacy;
+  const result = await api.post<{ results?: PaymentMethod[] }>(`${URL}/search`, { storeId: param.value, take: 100 });
   methods.value = result.results ?? [];
 });
 
