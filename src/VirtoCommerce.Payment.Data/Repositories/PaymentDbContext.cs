@@ -42,6 +42,22 @@ namespace VirtoCommerce.PaymentModule.Data.Repositories
                     .HasDatabaseName("IX_PaymentMethodLocalizedName_LanguageCode_ParentEntityId");
             });
 
+            modelBuilder.Entity<StoredPaymentMethodEntity>(builder =>
+            {
+                builder.ToTable("StoredPaymentMethod").HasKey(x => x.Id);
+                builder.Property(x => x.Id).HasMaxLength(IdLength).ValueGeneratedOnAdd();
+                builder.HasIndex(x => new { x.CustomerId, x.StoreId }).HasDatabaseName("IX_StoredPaymentMethod_CustomerId_StoreId");
+                builder.HasIndex(x => x.InitialOrderId).HasDatabaseName("IX_StoredPaymentMethod_InitialOrderId");
+            });
+
+            modelBuilder.Entity<PaymentConsentEntity>(builder =>
+            {
+                builder.ToTable("PaymentConsent").HasKey(x => x.Id);
+                builder.Property(x => x.Id).HasMaxLength(IdLength).ValueGeneratedOnAdd();
+                builder.HasIndex(x => new { x.CustomerId, x.StoreId }).HasDatabaseName("IX_PaymentConsent_CustomerId_StoreId");
+                builder.HasIndex(x => new { x.ObjectType, x.ObjectId }).HasDatabaseName("IX_PaymentConsent_ObjectType_ObjectId");
+            });
+
             base.OnModelCreating(modelBuilder);
 
 
