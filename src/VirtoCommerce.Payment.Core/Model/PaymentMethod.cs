@@ -142,33 +142,6 @@ namespace VirtoCommerce.PaymentModule.Core.Model
         {
             throw new NotImplementedException();
         }
-
-        /// <summary>
-        /// Saves a payment method at the provider for future use, optionally verifying it with a $0 authorization.
-        /// Supported only by payment methods that implement <see cref="ISupportStoredCredentialFlow"/>.
-        /// </summary>
-        public virtual Task<StorePaymentMethodRequestResult> StorePaymentMethodAsync(StorePaymentMethodRequest request, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Charges a stored payment method from the server without the customer present (merchant-initiated transaction).
-        /// Supported only by payment methods that implement <see cref="ISupportStoredCredentialFlow"/>.
-        /// </summary>
-        public virtual Task<ProcessStoredPaymentRequestResult> ProcessStoredPaymentAsync(ProcessStoredPaymentRequest request, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Deletes or deactivates a stored payment method at the provider.
-        /// Supported only by payment methods that implement <see cref="ISupportStoredCredentialFlow"/>.
-        /// </summary>
-        public virtual Task<DeleteStoredPaymentMethodRequestResult> DeleteStoredPaymentMethodAsync(DeleteStoredPaymentMethodRequest request, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
         
         #region ICloneable members
 
