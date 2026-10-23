@@ -1,0 +1,29 @@
+{
+  "PAYMENT": {
+    "TITLE": "Modes de paiement",
+    "EMPTY": "Aucun mode de paiement enregistré",
+    "GENERAL": "Général",
+    "ACTIVE": "Actif",
+    "INACTIVE": "Inactif",
+    "FIELDS": {
+      "LOGO": "Logo",
+      "NAME": "Nom",
+      "CODE": "Code",
+      "PRIORITY": "Priorité",
+      "STATUS": "Statut",
+      "IS_ACTIVE": "Actif",
+      "PARTIAL": "Disponible pour les paiements partiels",
+      "DEFERRED": "Autoriser le paiement différé",
+      "DESCRIPTION": "Description",
+      "LOCALIZED_NAME": "Nom localisé"
+    },
+    "TOOLBAR": {
+      "REFRESH": "Actualiser",
+      "SAVE": "Enregistrer",
+      "RESET": "Réinitialiser"
+    },
+    "ALERTS": {
+      "CLOSE_CONFIRMATION": "Certaines modifications ne sont pas enregistrées. Fermer quand même ?"
+    }
+  }
+}

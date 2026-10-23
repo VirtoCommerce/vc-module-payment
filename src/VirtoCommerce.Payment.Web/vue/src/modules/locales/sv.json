@@ -1,0 +1,29 @@
+{
+  "PAYMENT": {
+    "TITLE": "Betalningsmetoder",
+    "EMPTY": "Inga betalningsmetoder registrerade",
+    "GENERAL": "Allmänt",
+    "ACTIVE": "Aktiv",
+    "INACTIVE": "Inaktiv",
+    "FIELDS": {
+      "LOGO": "Logotyp",
+      "NAME": "Namn",
+      "CODE": "Kod",
+      "PRIORITY": "Prioritet",
+      "STATUS": "Status",
+      "IS_ACTIVE": "Aktiv",
+      "PARTIAL": "Tillgänglig för delbetalningar",
+      "DEFERRED": "Tillåt uppskjuten betalning",
+      "DESCRIPTION": "Beskrivning",
+      "LOCALIZED_NAME": "Lokaliserat namn"
+    },
+    "TOOLBAR": {
+      "REFRESH": "Uppdatera",
+      "SAVE": "Spara",
+      "RESET": "Återställ"
+    },
+    "ALERTS": {
+      "CLOSE_CONFIRMATION": "Du har osparade ändringar. Stäng ändå?"
+    }
+  }
+}

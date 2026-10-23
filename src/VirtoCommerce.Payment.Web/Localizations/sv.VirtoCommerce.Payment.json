@@ -1,0 +1,68 @@
+{
+  "payment": {
+    "blades": {
+      "payment-method-detail": {
+        "subtitle": "Redigera betalningsmetod",
+        "labels": {
+          "is-active": "Är aktiv",
+          "is-partial-payments-available": "Delbetalning är tillgänglig",
+          "allow-deferred-payment": "Tillämpa status för avslutad betalning",
+          "name": "Namn",
+          "localized-name": "Lokaliserat namn",
+          "code": "Kod",
+          "description": "Beskrivning",
+          "settings": "Inställningar",
+          "logoUrl": "Logotyp-URL",
+          "show-more-languages": "Visa fler språk",
+          "show-less-languages": "Visa färre språk"
+        },
+        "placeholders": {
+          "localized-name": "Ange namn",
+          "description": "Ange beskrivning"
+        }
+      },
+      "payment-method-list": {
+        "subtitle": "Redigera betalningsmetod",
+        "labels": {
+          "is-active": "Är aktiv",
+          "payment-method": "Betalningsmetod",
+          "note": "Ordna i vilken ordning betalningsmetoderna visas i webbutiken. Dra och släpp för att ändra ordningen"
+        },
+        "placeholders": {
+          "description": "Ange beskrivning"
+        }
+      }
+    },
+    "dialogs": {
+      "payment-method-save": {
+        "title": "Spara ändringar",
+        "message": "Betalningsmetoden har ändrats. Vill du spara ändringarna?"
+      }
+    },
+    "widgets": {
+      "store-payment-widget": {
+        "title": "Betalningsmetoder",
+        "blade-subtitle": "Betalningsmetoder"
+      }
+    },
+    "labels": {
+      "DefaultManualPaymentMethod": {
+        "name": "Manuell testbetalningsmetod",
+        "description": "Manuell testmetod, använd inte i produktion"
+      }
+    }
+  },
+  "settings": {
+    "VirtoCommerce.Payment.DefaultManualPaymentMethod": {
+      "ExampleSetting": {
+        "title": "Exempelinställning",
+        "description": "Exempelinställning för betalningsmetod"
+      }
+    }
+  },
+  "module": {
+    "VirtoCommerce.Payment": {
+      "description": "Export/import av betalningsmetoder"
+    }
+  }
+}

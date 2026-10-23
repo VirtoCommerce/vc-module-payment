@@ -1,0 +1,29 @@
+{
+  "PAYMENT": {
+    "TITLE": "Metody płatności",
+    "EMPTY": "Brak zarejestrowanych metod płatności",
+    "GENERAL": "Ogólne",
+    "ACTIVE": "Aktywna",
+    "INACTIVE": "Nieaktywna",
+    "FIELDS": {
+      "LOGO": "Logo",
+      "NAME": "Nazwa",
+      "CODE": "Kod",
+      "PRIORITY": "Priorytet",
+      "STATUS": "Status",
+      "IS_ACTIVE": "Aktywna",
+      "PARTIAL": "Dostępna dla płatności częściowych",
+      "DEFERRED": "Zezwalaj na płatność odroczoną",
+      "DESCRIPTION": "Opis",
+      "LOCALIZED_NAME": "Zlokalizowana nazwa"
+    },
+    "TOOLBAR": {
+      "REFRESH": "Odśwież",
+      "SAVE": "Zapisz",
+      "RESET": "Resetuj"
+    },
+    "ALERTS": {
+      "CLOSE_CONFIRMATION": "Masz niezapisane zmiany. Zamknąć mimo to?"
+    }
+  }
+}

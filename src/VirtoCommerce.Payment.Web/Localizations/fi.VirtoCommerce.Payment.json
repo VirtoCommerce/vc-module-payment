@@ -1,0 +1,68 @@
+{
+  "payment": {
+    "blades": {
+      "payment-method-detail": {
+        "subtitle": "Muokkaa maksutapaa",
+        "labels": {
+          "is-active": "Aktiivinen",
+          "is-partial-payments-available": "Osamaksu käytettävissä",
+          "allow-deferred-payment": "Sovella tilaa keskeytettyyn maksuun",
+          "name": "Nimi",
+          "localized-name": "Lokalisoitu nimi",
+          "code": "Koodi",
+          "description": "Kuvaus",
+          "settings": "Asetukset",
+          "logoUrl": "Logon URL",
+          "show-more-languages": "Näytä lisää kieliä",
+          "show-less-languages": "Näytä vähemmän kieliä"
+        },
+        "placeholders": {
+          "localized-name": "Anna nimi",
+          "description": "Anna kuvaus"
+        }
+      },
+      "payment-method-list": {
+        "subtitle": "Muokkaa maksutapaa",
+        "labels": {
+          "is-active": "Aktiivinen",
+          "payment-method": "Maksutapa",
+          "note": "Määritä järjestys, jossa maksutavat näytetään verkkokaupassa. Järjestä ne uudelleen vetämällä ja pudottamalla"
+        },
+        "placeholders": {
+          "description": "Anna kuvaus"
+        }
+      }
+    },
+    "dialogs": {
+      "payment-method-save": {
+        "title": "Tallenna muutokset",
+        "message": "Maksutapaa on muokattu. Haluatko tallentaa muutokset?"
+      }
+    },
+    "widgets": {
+      "store-payment-widget": {
+        "title": "Maksutavat",
+        "blade-subtitle": "Maksutavat"
+      }
+    },
+    "labels": {
+      "DefaultManualPaymentMethod": {
+        "name": "Manuaalinen testimaksutapa",
+        "description": "Manuaalinen testitapa, älä käytä tuotannossa"
+      }
+    }
+  },
+  "settings": {
+    "VirtoCommerce.Payment.DefaultManualPaymentMethod": {
+      "ExampleSetting": {
+        "title": "Esimerkkiasetus",
+        "description": "Maksutavan esimerkkiasetus"
+      }
+    }
+  },
+  "module": {
+    "VirtoCommerce.Payment": {
+      "description": "Maksutapojen vienti/tuonti"
+    }
+  }
+}
