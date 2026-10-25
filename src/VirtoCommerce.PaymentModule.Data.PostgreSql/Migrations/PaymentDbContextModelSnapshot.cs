@@ -99,6 +99,9 @@ namespace VirtoCommerce.PaymentModule.Data.PostgreSql.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("StoredPaymentMethodId")
+                        .HasDatabaseName("IX_PaymentConsent_StoredPaymentMethodId");
+
                     b.HasIndex("CustomerId", "StoreId")
                         .HasDatabaseName("IX_PaymentConsent_CustomerId_StoreId");
 
@@ -301,6 +304,15 @@ namespace VirtoCommerce.PaymentModule.Data.PostgreSql.Migrations
 
                     b.HasIndex("InitialOrderId")
                         .HasDatabaseName("IX_StoredPaymentMethod_InitialOrderId");
+
+                    b.HasIndex("InitialPaymentId")
+                        .HasDatabaseName("IX_StoredPaymentMethod_InitialPaymentId");
+
+                    b.HasIndex("OrganizationId")
+                        .HasDatabaseName("IX_StoredPaymentMethod_OrganizationId");
+
+                    b.HasIndex("PaymentMethodCode")
+                        .HasDatabaseName("IX_StoredPaymentMethod_PaymentMethodCode");
 
                     b.HasIndex("CustomerId", "StoreId")
                         .HasDatabaseName("IX_StoredPaymentMethod_CustomerId_StoreId");
