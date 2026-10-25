@@ -12,11 +12,15 @@ The Payment module provides management and integration of various payment method
 * **Full payment lifecycle** — Abstract `PaymentMethod` base class supports Process, PostProcess, Void, Capture, and Refund operations with both synchronous (obsolete) and async APIs
 * **Per-store configuration** — Each payment method is persisted per store with settings for activation, priority, logo, deferred payment, partial payment availability, and localized display names
 * **Search and filtering** — Search payment methods by store, code, keyword, and active status; includes both persisted and transient (registered but not yet configured) methods in results
-* **Stored credentials (card on file)** — Payment methods that implement `ISupportStoredCredentialFlow` save a card at the provider (`StorePaymentMethodAsync`), charge it without the customer present (`ProcessStoredPaymentAsync`) and delete it (`DeleteStoredPaymentMethodAsync`); results use provider-independent outcomes (`Succeeded`, `RequiresAction`, `SoftDecline`, `HardDecline`, `ProviderError`) with the raw code, advice code, retry hint and 3-D Secure recovery URL
-* **Saved cards and consents** — `StoredPaymentMethod` (provider token, brand, last 4 digits, expiry, network transaction ID, status, default card) and `PaymentConsent` (terms version and hash, channel, IP address, user agent, accepted and revoked dates) with CRUD and search services
+* **Stored credentials (card on file)** — Payment methods that implement `ISupportStoredCredentialFlow` save a card at the provider, during a customer-present payment (`ProcessPaymentRequest.StoreForFutureUse`) or on its own (`StorePaymentMethodAsync`), charge it later without the customer present (`ProcessStoredPaymentAsync`) and delete it (`DeleteStoredPaymentMethodAsync`). Callers check `paymentMethod is ISupportStoredCredentialFlow` before using the flow
+* **Provider-independent charge results** — Every stored-credential call returns a `ChargeOutcome` (`Succeeded`, `RequiresAction`, `SoftDecline`, `HardDecline`, `ProviderError`) with the raw provider code and message, the card network advice code, the earliest retry time, the 3-D Secure recovery URL and whether the provider retries on its own, so callers apply one retry and recovery policy to every connector
+* **Merchant-initiated transaction data** — Charges carry the usage (`CardOnFile`, `Recurring`, `Unscheduled`), the sequence (`First`, `Subsequent`), the reason (`Recurring`, `Unscheduled`, `Reauthorization`, `Resubmission`, `DelayedCharge`), the capture mode (`AuthorizeOnly`, `AuthorizeAndCapture`), an idempotency key and the network transaction ID of the first charge
+* **Saved cards** — `StoredPaymentMethod` per store, customer and organization: provider token and customer reference, brand, last 4 digits, expiry (`IsExpired`), fingerprint, network transaction ID, the order and payment it was saved with, status (`Active`, `NeedsUpdate`, `Expired`, `Revoked`) and a default card flag. No card number is stored
+* **Consent records** — `PaymentConsent` keeps the evidence of what the customer agreed to (terms version, text and hash, channel, IP address, user agent, accepted date) and the object it relates to; after it is saved, only the link to the saved card and the revocation date can change
+* **Saved card and consent services** — CRUD and search services with change events for both; the main search filters are indexed
 * **Built-in manual payment method** — `DefaultManualPaymentMethod` provides an out-of-the-box payment method supporting capture and refund flows for manual/offline payment scenarios
 * **Localized display names** — Payment methods support localized names per language through the `PaymentMethodLocalizedName` entity
-* **Domain events** — Publishes `PaymentMethodChangeEvent` (before save), `PaymentMethodChangedEvent` (after save), and `PaymentMethodInstancingEvent` (before instantiation) for extensibility
+* **Domain events** — Publishes `PaymentMethodChangeEvent` (before save), `PaymentMethodChangedEvent` (after save), and `PaymentMethodInstancingEvent` (before instantiation) for extensibility, plus `StoredPaymentMethodChangingEvent` / `StoredPaymentMethodChangedEvent` and `PaymentConsentChangingEvent` / `PaymentConsentChangedEvent` for saved cards and consents
 * **Export/Import** — Full platform export/import support for payment method configurations with batched processing
 * **Multi-database support** — Entity Framework Core migrations for SQL Server, PostgreSQL, and MySQL
 * **Polymorphic JSON serialization** — Custom `PaymentMethodsJsonConverter` enables correct deserialization of payment method subtypes via the `TypeName` discriminator
@@ -63,11 +67,15 @@ The module follows the layered architecture of Virto Commerce modules:
 
 ### Stored Credential Flow
 
-1. **Consent** — The storefront records the customer's agreement to save the card and be charged later as a `PaymentConsent` (through the consuming module, for example Product Subscriptions)
-2. **Save the card** — During checkout the payment method saves the card at the provider (`StorePaymentMethodAsync`, optionally verified with a $0 authorization or 3-D Secure); the consuming module persists the returned `StoredPaymentMethod` with `IStoredPaymentMethodService`
-3. **Charge later** — A merchant-initiated charge calls `ProcessStoredPaymentAsync` with the stored card, amount, currency, an idempotency key, the usage (`Recurring`, `Unscheduled`, `CardOnFile`), the sequence and the capture mode (`AuthorizeOnly` or `AuthorizeAndCapture`)
-4. **Interpret the result** — The caller acts on `ChargeOutcome`: retry a `SoftDecline` after `RetryAfter`, stop on a `HardDecline`, send the customer to `RecoveryUrl` on `RequiresAction`, retry a `ProviderError` with the same idempotency key
-5. **Remove** — `DeleteStoredPaymentMethodAsync` deletes or deactivates the card at the provider when the customer removes it
+1. **Check support** — The caller resolves the payment method and checks `paymentMethod is ISupportStoredCredentialFlow`. The base `PaymentMethod` implementations of the three stored-credential methods throw `NotImplementedException`, so a payment method without the marker is never asked to save or charge a card
+2. **Consent** — The storefront records the customer's agreement to save the card and be charged later as a `PaymentConsent` with `IPaymentConsentService` (through the consuming module, for example Product Subscriptions)
+3. **Save the card** — Either way, the result is a `StoredPaymentMethod` persisted with `IStoredPaymentMethodService`:
+   * **During checkout**, the payment request carries `StoreForFutureUse`, `StoredCredentialUsage` and `ConsentId`; when the payment is authorized, the payment method saves the card at the provider and persists it with the network transaction ID of this first charge and the order and payment it was saved with
+   * **On its own** (a card added from the customer's account, or a free trial), the caller calls `StorePaymentMethodAsync`, optionally verified with a $0 authorization or 3-D Secure, and persists the returned `StoredPaymentMethod`
+4. **Charge later** — A merchant-initiated charge calls `ProcessStoredPaymentAsync` with the stored card, amount, currency, an idempotency key, the usage, the sequence, the reason and the capture mode
+5. **Interpret the result** — The caller acts on `ChargeOutcome`: retry a `SoftDecline` after `RetryAfter`, stop on a `HardDecline`, send the customer to `RecoveryUrl` on `RequiresAction`, retry a `ProviderError` with the same idempotency key. When `IsProviderRetryScheduled` is set, the provider retries on its own and the caller must not
+6. **Keep the card current** — The caller updates the card's `Status` (`NeedsUpdate`, `Expired`, `Revoked`), `LastUsedDate` and `UpdatedByProviderDate`; `IsExpired(utcNow)` tells whether the card's expiry month has passed
+7. **Remove** — `DeleteStoredPaymentMethodAsync` deletes or deactivates the card at the provider when the customer removes it
 
 ## Components
 
@@ -90,8 +98,8 @@ The module follows the layered architecture of Virto Commerce modules:
 | `PaymentMethodsService` | `IPaymentMethodsService`, `IPaymentMethodsRegistrar` | CRUD operations for payment methods with settings deep-load/save; registers payment method types into `AbstractTypeFactory`; publishes instancing events during entity-to-model conversion |
 | `PaymentMethodsSearchService` | `IPaymentMethodsSearchService` | Searches persisted payment methods with filtering (store, code, keyword, active status) and appends transient registered-but-unconfigured methods to results |
 | `PaymentRepository` | `IPaymentRepository` | EF Core data access for `StorePaymentMethodEntity` with eager loading of localized names |
-| `StoredPaymentMethodService` / `StoredPaymentMethodSearchService` | `IStoredPaymentMethodService`, `IStoredPaymentMethodSearchService` | CRUD and search for saved cards by store, customer, organization, payment method, status and fingerprint; publish `StoredPaymentMethodChangingEvent` / `StoredPaymentMethodChangedEvent` |
-| `PaymentConsentService` / `PaymentConsentSearchService` | `IPaymentConsentService`, `IPaymentConsentSearchService` | CRUD and search for consent records; publish `PaymentConsentChangingEvent` / `PaymentConsentChangedEvent` |
+| `StoredPaymentMethodService` / `StoredPaymentMethodSearchService` | `IStoredPaymentMethodService`, `IStoredPaymentMethodSearchService` | CRUD and search for saved cards by store, customer, organization, payment method, statuses, initial order and initial payment (default sort: the default card first, then the newest); publish `StoredPaymentMethodChangingEvent` / `StoredPaymentMethodChangedEvent` |
+| `PaymentConsentService` / `PaymentConsentSearchService` | `IPaymentConsentService`, `IPaymentConsentSearchService` | CRUD and search for consent records by store, customer, saved card, purpose and related object (default sort: the newest first); publish `PaymentConsentChangingEvent` / `PaymentConsentChangedEvent` |
 | `PaymentExportImport` | — | Batched export/import of payment method configurations via platform's export/import infrastructure |
 | `DefaultManualPaymentMethod` | — | Built-in manual payment method implementing `ISupportCaptureFlow` and `ISupportRefundFlow`; auto-approves Process, Capture, Void, and Refund operations |
 
@@ -602,15 +610,48 @@ public class Module : IModule, IHasConfiguration
 
 ### Supporting Stored Credentials (Card on File)
 
-To let other modules save a card and charge it later, implement `ISupportStoredCredentialFlow` on your payment method and override three methods:
+To let other modules save a card and charge it later, implement `ISupportStoredCredentialFlow` on your payment method and override three methods. The marker is how callers find out that your payment method supports the flow; without it, the base implementations throw `NotImplementedException`.
 
 | Method | Called when | Returns |
 |--------|-------------|---------|
-| `StorePaymentMethodAsync(StorePaymentMethodRequest)` | The customer saves a card, usually during checkout | `StorePaymentMethodRequestResult` with the `StoredPaymentMethod` to persist (provider token, brand, last 4 digits, expiry, network transaction ID) |
-| `ProcessStoredPaymentAsync(ProcessStoredPaymentRequest)` | A charge without the customer present (renewal, delayed charge, reauthorization) | `ProcessStoredPaymentRequestResult` with `Outcome`, transaction and network transaction IDs, authorization code |
+| `StorePaymentMethodAsync(StorePaymentMethodRequest)` | A card is saved without a payment: added from the customer's account, or for a free trial. `Verify` asks for a $0 authorization | `StorePaymentMethodRequestResult` with the `StoredPaymentMethod` to persist (provider token and customer reference, brand, last 4 digits, expiry, network transaction ID); the caller saves it |
+| `ProcessStoredPaymentAsync(ProcessStoredPaymentRequest)` | A charge without the customer present (renewal, delayed charge, reauthorization, resubmission) | `ProcessStoredPaymentRequestResult` with `Outcome`, transaction and network transaction IDs, authorization code and amount |
 | `DeleteStoredPaymentMethodAsync(DeleteStoredPaymentMethodRequest)` | The customer removes the card | `DeleteStoredPaymentMethodRequestResult` |
 
-Map the provider's response to `ChargeOutcome` and fill `RawCode`, `RawMessage` and `AdviceCode`, so callers can apply card network retry rules without knowing the provider. Return the network transaction ID of the first charge and send it with later merchant-initiated charges, and honour `IdempotencyKey` so that a retried charge is not taken twice.
+```csharp
+public class MyGatewayPaymentMethod : PaymentMethod, ISupportStoredCredentialFlow
+{
+    public override async Task<ProcessStoredPaymentRequestResult> ProcessStoredPaymentAsync(
+        ProcessStoredPaymentRequest request, CancellationToken cancellationToken = default)
+    {
+        // Charge request.StoredPaymentMethod.Token as a merchant-initiated transaction:
+        // send request.IdempotencyKey, request.Reason and request.StoredPaymentMethod.NetworkTransactionId.
+        var response = await _gateway.ChargeAsync(/* ... */);
+
+        return new ProcessStoredPaymentRequestResult
+        {
+            IsSuccess = response.Approved,
+            Outcome = MapOutcome(response), // Succeeded, RequiresAction, SoftDecline, HardDecline or ProviderError
+            TransactionId = response.TransactionId,
+            NetworkTransactionId = response.NetworkTransactionId,
+            AuthorizationCode = response.AuthorizationCode,
+            RawCode = response.Code,
+            RawMessage = response.Message,
+            AdviceCode = response.MerchantAdviceCode,
+        };
+    }
+
+    // StorePaymentMethodAsync and DeleteStoredPaymentMethodAsync are overridden the same way.
+}
+```
+
+**Saving the card during checkout.** When `ProcessPaymentRequest.StoreForFutureUse` is set, save the card at the provider together with the payment. Once the payment is authorized, persist a `StoredPaymentMethod` with `IStoredPaymentMethodService`: the customer, store and organization from the order; the provider token and customer reference; `NetworkTransactionId` of this first charge; `InitialOrderId`, `InitialPaymentId` and `InitialTransactionRef`; `Usage` from `StoredCredentialUsage`; `ConsentId`; and `IsAuthenticated` when the customer completed 3-D Secure. The Product Subscriptions mock connector (`MockStoredCardPaymentMethod`) shows this in `PostProcessPaymentAsync`.
+
+**Results.** Map the provider's response to `ChargeOutcome` and fill `RawCode`, `RawMessage` and `AdviceCode`, so callers can apply card network retry rules without knowing the provider. Never show `RawCode` or `RawMessage` to customers. Set `RetryAfter` on a `SoftDecline` when the provider says when to retry, `RecoveryUrl` on `RequiresAction`, and `IsProviderRetryScheduled` when the provider runs its own retries (the caller then does not retry).
+
+**Merchant-initiated charges.** Send the network transaction ID of the first charge with every later charge, and honour `IdempotencyKey` so that a retried charge is never taken twice. `CaptureMode = AuthorizeOnly` asks for an authorization to capture later; `AuthorizeAndCapture` captures at once.
+
+**Security.** `Token` and `ProviderCustomerRef` are provider references, not card numbers, but together they can charge the card through the merchant's provider account. Keep them out of storefront and public API responses.
 
 The Product Subscriptions module ships a connector test kit (`VirtoCommerce.ProductSubscription.ConnectorTestKit`) with contract tests for this flow: success, soft and hard declines, 3-D Secure on save and on renewal, and provider errors.
 
