@@ -68,6 +68,7 @@ namespace VirtoCommerce.PaymentModule.Web
             serviceCollection.AddTransient<IStoredPaymentMethodSearchService, StoredPaymentMethodSearchService>();
             serviceCollection.AddTransient<IPaymentConsentService, PaymentConsentService>();
             serviceCollection.AddTransient<IPaymentConsentSearchService, PaymentConsentSearchService>();
+            serviceCollection.AddTransient<IStoredPaymentMethodManager, StoredPaymentMethodManager>();
             serviceCollection.AddTransient<PaymentExportImport>();
             serviceCollection.AddTransient<PaymentMethodsJsonConverter>();
         }

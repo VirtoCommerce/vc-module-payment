@@ -3,7 +3,7 @@ using VirtoCommerce.PaymentModule.Core.Model.StoredCredentials;
 
 namespace VirtoCommerce.PaymentModule.Model.Requests
 {
-    public class ProcessPaymentRequest : PaymentRequestBase
+    public class ProcessPaymentRequest : PaymentRequestBase, IStoredCredentialPaymentRequest
     {
         public BankCardInfo BankCardInfo { get; set; }
 
@@ -17,5 +17,8 @@ namespace VirtoCommerce.PaymentModule.Model.Requests
 
         /// <summary>Consent record that covers storing the payment method.</summary>
         public string ConsentId { get; set; }
+
+        /// <inheritdoc />
+        public StoredPaymentMethod StoredPaymentMethod { get; set; }
     }
 }
