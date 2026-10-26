@@ -69,13 +69,13 @@ The module follows the layered architecture of Virto Commerce modules:
 
 1. **Check support** — The caller resolves the payment method and checks `paymentMethod is ISupportStoredCredentialFlow`. The base `PaymentMethod` implementations of the three stored-credential methods throw `NotImplementedException`, so a payment method without the marker is never asked to save or charge a card
 2. **Consent** — The storefront records the customer's agreement to save the card and be charged later as a `PaymentConsent` with `IPaymentConsentService` (through the consuming module, for example Product Subscriptions)
-3. **Save the card** — Either way, the result is a `StoredPaymentMethod` persisted with `IStoredPaymentMethodService`:
-   * **During checkout**, the payment request carries `StoreForFutureUse`, `StoredCredentialUsage` and `ConsentId`; when the payment is authorized, the payment method saves the card at the provider and persists it with the network transaction ID of this first charge and the order and payment it was saved with
-   * **On its own** (a card added from the customer's account, or a free trial), the caller calls `StorePaymentMethodAsync`, optionally verified with a $0 authorization or 3-D Secure, and persists the returned `StoredPaymentMethod`
+3. **Save the card** — The payment method saves the card at the provider and returns it as an unsaved `StoredPaymentMethod`; `IStoredPaymentMethodManager` records it. Payment methods never read or write saved cards themselves:
+   * **During checkout**, the storefront posts `storeForFutureUse`, `consentId` (and, to pay with a saved card, `storedPaymentMethodId`) as payment parameters. `IStoredPaymentMethodManager.PrepareAsync` turns them into the typed `StoreForFutureUse`, `StoredCredentialUsage`, `ConsentId` and `StoredPaymentMethod` of the request (`IStoredCredentialPaymentRequest`), checking that a saved card is the customer's, active and of this payment method. When the payment is authorized, the payment method returns the card it saved in the result (`IStoredCredentialPaymentResult.StoredPaymentMethod`) and `SaveFromPaymentAsync` records it with the order and payment, or marks the saved card that paid as used
+   * **On its own** (a card added from the customer's account, or a free trial), `IStoredPaymentMethodManager.AddAsync` calls `StorePaymentMethodAsync`, optionally verified with a $0 authorization or 3-D Secure, and records the returned card
 4. **Charge later** — A merchant-initiated charge calls `ProcessStoredPaymentAsync` with the stored card, amount, currency, an idempotency key, the usage, the sequence, the reason and the capture mode
 5. **Interpret the result** — The caller acts on `ChargeOutcome`: retry a `SoftDecline` after `RetryAfter`, stop on a `HardDecline`, send the customer to `RecoveryUrl` on `RequiresAction`, retry a `ProviderError` with the same idempotency key. When `IsProviderRetryScheduled` is set, the provider retries on its own and the caller must not
 6. **Keep the card current** — The caller updates the card's `Status` (`NeedsUpdate`, `Expired`, `Revoked`), `LastUsedDate` and `UpdatedByProviderDate`; `IsExpired(utcNow)` tells whether the card's expiry month has passed
-7. **Remove** — `DeleteStoredPaymentMethodAsync` deletes or deactivates the card at the provider when the customer removes it
+7. **Remove** — `IStoredPaymentMethodManager.RemoveAsync` asks every `IStoredPaymentMethodUsageProvider` whether the card is in use (for example by a subscription), then calls `DeleteStoredPaymentMethodAsync` to delete it at the provider and revokes it; the default passes to the customer's most recent active card
 
 ## Components
 
@@ -99,6 +99,7 @@ The module follows the layered architecture of Virto Commerce modules:
 | `PaymentMethodsSearchService` | `IPaymentMethodsSearchService` | Searches persisted payment methods with filtering (store, code, keyword, active status) and appends transient registered-but-unconfigured methods to results |
 | `PaymentRepository` | `IPaymentRepository` | EF Core data access for `StorePaymentMethodEntity` with eager loading of localized names |
 | `StoredPaymentMethodService` / `StoredPaymentMethodSearchService` | `IStoredPaymentMethodService`, `IStoredPaymentMethodSearchService` | CRUD and search for saved cards by store, customer, organization, payment method, statuses, initial order and initial payment (default sort: the default card first, then the newest); publish `StoredPaymentMethodChangingEvent` / `StoredPaymentMethodChangedEvent` |
+| `StoredPaymentMethodManager` | `IStoredPaymentMethodManager` | The rules for saved cards: resolves the saved card a payment uses (owner, status, payment method), records the card a payment method saved (same card updates the existing record, the first card becomes the default), adds a card without a payment, removes a card unless an `IStoredPaymentMethodUsageProvider` reports it in use, and keeps one default card per customer and store |
 | `PaymentConsentService` / `PaymentConsentSearchService` | `IPaymentConsentService`, `IPaymentConsentSearchService` | CRUD and search for consent records by store, customer, saved card, purpose and related object (default sort: the newest first); publish `PaymentConsentChangingEvent` / `PaymentConsentChangedEvent` |
 | `PaymentExportImport` | — | Batched export/import of payment method configurations via platform's export/import infrastructure |
 | `DefaultManualPaymentMethod` | — | Built-in manual payment method implementing `ISupportCaptureFlow` and `ISupportRefundFlow`; auto-approves Process, Capture, Void, and Refund operations |
@@ -114,7 +115,7 @@ Base route: `api/payment`
 | `GET` | `api/payment/{id}` | Get a specific payment method configuration by its ID |
 | `PUT` | `api/payment` | Create or update a payment method configuration (activation, priority, settings, localized names, etc.) |
 
-Saved cards and consents have no REST endpoints in this module; the modules that use them (for example Product Subscriptions) expose them through their own API and to the storefront.
+Saved cards and consents have no REST endpoints in this module. The storefront manages saved cards through x-cart, and x-order's `authorizePayment` saves or uses them during checkout; both go through `IStoredPaymentMethodManager`.
 
 ## Developer Guide: Payment Flow End-to-End
 
@@ -645,7 +646,9 @@ public class MyGatewayPaymentMethod : PaymentMethod, ISupportStoredCredentialFlo
 }
 ```
 
-**Saving the card during checkout.** When `ProcessPaymentRequest.StoreForFutureUse` is set, save the card at the provider together with the payment. Once the payment is authorized, persist a `StoredPaymentMethod` with `IStoredPaymentMethodService`: the customer, store and organization from the order; the provider token and customer reference; `NetworkTransactionId` of this first charge; `InitialOrderId`, `InitialPaymentId` and `InitialTransactionRef`; `Usage` from `StoredCredentialUsage`; `ConsentId`; and `IsAuthenticated` when the customer completed 3-D Secure. The Product Subscriptions mock connector (`MockStoredCardPaymentMethod`) shows this in `PostProcessPaymentAsync`.
+**Saving the card during checkout.** When `StoreForFutureUse` is set on the `ProcessPaymentRequest` or `PostProcessPaymentRequest`, save the card at the provider together with the payment. Once the payment is authorized, return the card in the result's `StoredPaymentMethod`: the provider token and customer reference, brand, last 4 digits and expiry, `NetworkTransactionId` of this first charge, `InitialTransactionRef`, and `IsAuthenticated` when the customer completed 3-D Secure. Don't persist it and don't look up the customer's other cards: the caller records it with `IStoredPaymentMethodManager`, which adds the customer, store, order, payment, consent and default card.
+
+**Paying with a saved card.** When the request's `StoredPaymentMethod` is set, charge that card as a customer-initiated stored credential transaction instead of new card data. The caller has already checked that the card belongs to the customer and is active.
 
 **Results.** Map the provider's response to `ChargeOutcome` and fill `RawCode`, `RawMessage` and `AdviceCode`, so callers can apply card network retry rules without knowing the provider. Never show `RawCode` or `RawMessage` to customers. Set `RetryAfter` on a `SoftDecline` when the provider says when to retry, `RecoveryUrl` on `RequiresAction`, and `IsProviderRetryScheduled` when the provider runs its own retries (the caller then does not retry).
 
