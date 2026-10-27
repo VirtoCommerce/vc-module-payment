@@ -1,0 +1,29 @@
+{
+  "PAYMENT": {
+    "TITLE": "Payment methods",
+    "EMPTY": "No payment methods registered",
+    "GENERAL": "General",
+    "ACTIVE": "Active",
+    "INACTIVE": "Inactive",
+    "FIELDS": {
+      "LOGO": "Logo",
+      "NAME": "Name",
+      "CODE": "Code",
+      "PRIORITY": "Priority",
+      "STATUS": "Status",
+      "IS_ACTIVE": "Active",
+      "PARTIAL": "Available for partial payments",
+      "DEFERRED": "Allow deferred payment",
+      "DESCRIPTION": "Description",
+      "LOCALIZED_NAME": "Localized name"
+    },
+    "TOOLBAR": {
+      "REFRESH": "Refresh",
+      "SAVE": "Save",
+      "RESET": "Reset"
+    },
+    "ALERTS": {
+      "CLOSE_CONFIRMATION": "You have unsaved changes. Close anyway?"
+    }
+  }
+}

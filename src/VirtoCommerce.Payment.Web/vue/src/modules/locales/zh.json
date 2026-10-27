@@ -1,0 +1,29 @@
+{
+  "PAYMENT": {
+    "TITLE": "支付方式",
+    "EMPTY": "没有已注册的支付方式",
+    "GENERAL": "常规",
+    "ACTIVE": "已启用",
+    "INACTIVE": "已停用",
+    "FIELDS": {
+      "LOGO": "徽标",
+      "NAME": "名称",
+      "CODE": "代码",
+      "PRIORITY": "优先级",
+      "STATUS": "状态",
+      "IS_ACTIVE": "启用",
+      "PARTIAL": "支持部分支付",
+      "DEFERRED": "允许延期支付",
+      "DESCRIPTION": "描述",
+      "LOCALIZED_NAME": "本地化名称"
+    },
+    "TOOLBAR": {
+      "REFRESH": "刷新",
+      "SAVE": "保存",
+      "RESET": "重置"
+    },
+    "ALERTS": {
+      "CLOSE_CONFIRMATION": "有未保存的更改。仍要关闭吗？"
+    }
+  }
+}
