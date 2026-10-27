@@ -1,0 +1,29 @@
+{
+  "PAYMENT": {
+    "TITLE": "Maksutavat",
+    "EMPTY": "Maksutapoja ei ole rekisteröity",
+    "GENERAL": "Yleiset",
+    "ACTIVE": "Aktiivinen",
+    "INACTIVE": "Ei aktiivinen",
+    "FIELDS": {
+      "LOGO": "Logo",
+      "NAME": "Nimi",
+      "CODE": "Koodi",
+      "PRIORITY": "Prioriteetti",
+      "STATUS": "Tila",
+      "IS_ACTIVE": "Aktiivinen",
+      "PARTIAL": "Käytettävissä osamaksuihin",
+      "DEFERRED": "Salli maksun lykkäys",
+      "DESCRIPTION": "Kuvaus",
+      "LOCALIZED_NAME": "Lokalisoitu nimi"
+    },
+    "TOOLBAR": {
+      "REFRESH": "Päivitä",
+      "SAVE": "Tallenna",
+      "RESET": "Palauta"
+    },
+    "ALERTS": {
+      "CLOSE_CONFIRMATION": "Muutoksia ei ole tallennettu. Suljetaanko silti?"
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "PAYMENT": {
+    "TITLE": "支払い方法",
+    "EMPTY": "登録されている支払い方法はありません",
+    "GENERAL": "一般",
+    "ACTIVE": "有効",
+    "INACTIVE": "無効",
+    "FIELDS": {
+      "LOGO": "ロゴ",
+      "NAME": "名前",
+      "CODE": "コード",
+      "PRIORITY": "優先度",
+      "STATUS": "ステータス",
+      "IS_ACTIVE": "有効",
+      "PARTIAL": "部分支払いに利用可能",
+      "DEFERRED": "後払いを許可",
+      "DESCRIPTION": "説明",
+      "LOCALIZED_NAME": "ローカライズ名"
+    },
+    "TOOLBAR": {
+      "REFRESH": "更新",
+      "SAVE": "保存",
+      "RESET": "リセット"
+    },
+    "ALERTS": {
+      "CLOSE_CONFIRMATION": "保存されていない変更があります。閉じてもよろしいですか？"
+    }
+  }
+}

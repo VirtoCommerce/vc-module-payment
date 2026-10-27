@@ -1,0 +1,29 @@
+{
+  "PAYMENT": {
+    "TITLE": "Zahlungsmethoden",
+    "EMPTY": "Keine Zahlungsmethoden registriert",
+    "GENERAL": "Allgemein",
+    "ACTIVE": "Aktiv",
+    "INACTIVE": "Inaktiv",
+    "FIELDS": {
+      "LOGO": "Logo",
+      "NAME": "Name",
+      "CODE": "Code",
+      "PRIORITY": "Priorität",
+      "STATUS": "Status",
+      "IS_ACTIVE": "Aktiv",
+      "PARTIAL": "Für Teilzahlungen verfügbar",
+      "DEFERRED": "Zahlungsaufschub zulassen",
+      "DESCRIPTION": "Beschreibung",
+      "LOCALIZED_NAME": "Lokalisierter Name"
+    },
+    "TOOLBAR": {
+      "REFRESH": "Aktualisieren",
+      "SAVE": "Speichern",
+      "RESET": "Zurücksetzen"
+    },
+    "ALERTS": {
+      "CLOSE_CONFIRMATION": "Sie haben nicht gespeicherte Änderungen. Trotzdem schließen?"
+    }
+  }
+}
