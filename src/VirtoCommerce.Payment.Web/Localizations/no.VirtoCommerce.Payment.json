@@ -1,0 +1,68 @@
+{
+  "payment": {
+    "blades": {
+      "payment-method-detail": {
+        "subtitle": "Rediger betalingsmetode",
+        "labels": {
+          "is-active": "Er aktiv",
+          "is-partial-payments-available": "Delbetaling er tilgjengelig",
+          "allow-deferred-payment": "Bruk status for avsluttet betaling",
+          "name": "Navn",
+          "localized-name": "Lokalisert navn",
+          "code": "Kode",
+          "description": "Beskrivelse",
+          "settings": "Innstillinger",
+          "logoUrl": "Logo-URL",
+          "show-more-languages": "Vis flere språk",
+          "show-less-languages": "Vis færre språk"
+        },
+        "placeholders": {
+          "localized-name": "Angi navn",
+          "description": "Angi beskrivelse"
+        }
+      },
+      "payment-method-list": {
+        "subtitle": "Rediger betalingsmetode",
+        "labels": {
+          "is-active": "Er aktiv",
+          "payment-method": "Betalingsmetode",
+          "note": "Angi rekkefølgen betalingsmetodene vises i nettbutikken. Dra og slipp for å endre rekkefølgen"
+        },
+        "placeholders": {
+          "description": "Angi beskrivelse"
+        }
+      }
+    },
+    "dialogs": {
+      "payment-method-save": {
+        "title": "Lagre endringer",
+        "message": "Betalingsmetoden er endret. Vil du lagre endringene?"
+      }
+    },
+    "widgets": {
+      "store-payment-widget": {
+        "title": "Betalingsmetoder",
+        "blade-subtitle": "Betalingsmetoder"
+      }
+    },
+    "labels": {
+      "DefaultManualPaymentMethod": {
+        "name": "Manuell testbetalingsmetode",
+        "description": "Manuell testmetode, må ikke brukes i produksjon"
+      }
+    }
+  },
+  "settings": {
+    "VirtoCommerce.Payment.DefaultManualPaymentMethod": {
+      "ExampleSetting": {
+        "title": "Eksempelinnstilling",
+        "description": "Eksempelinnstilling for betalingsmetode"
+      }
+    }
+  },
+  "module": {
+    "VirtoCommerce.Payment": {
+      "description": "Eksport/import av betalingsmetoder"
+    }
+  }
+}

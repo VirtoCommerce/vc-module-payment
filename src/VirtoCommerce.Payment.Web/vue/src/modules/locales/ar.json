@@ -1,0 +1,29 @@
+{
+  "PAYMENT": {
+    "TITLE": "طرق الدفع",
+    "EMPTY": "لا توجد طرق دفع مسجّلة",
+    "GENERAL": "عام",
+    "ACTIVE": "نشطة",
+    "INACTIVE": "غير نشطة",
+    "FIELDS": {
+      "LOGO": "الشعار",
+      "NAME": "الاسم",
+      "CODE": "الرمز",
+      "PRIORITY": "الأولوية",
+      "STATUS": "الحالة",
+      "IS_ACTIVE": "نشطة",
+      "PARTIAL": "متاحة للدفعات الجزئية",
+      "DEFERRED": "السماح بالدفع المؤجل",
+      "DESCRIPTION": "الوصف",
+      "LOCALIZED_NAME": "الاسم المترجم"
+    },
+    "TOOLBAR": {
+      "REFRESH": "تحديث",
+      "SAVE": "حفظ",
+      "RESET": "إعادة تعيين"
+    },
+    "ALERTS": {
+      "CLOSE_CONFIRMATION": "لديك تغييرات غير محفوظة. هل تريد الإغلاق على أي حال؟"
+    }
+  }
+}
