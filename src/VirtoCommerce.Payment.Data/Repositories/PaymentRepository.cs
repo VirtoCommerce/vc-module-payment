@@ -24,5 +24,19 @@ namespace VirtoCommerce.PaymentModule.Data.Repositories
                 .AsSplitQuery()
                 .ToListAsync();
         }
+
+        public IQueryable<StoredPaymentMethodEntity> StoredPaymentMethods => DbContext.Set<StoredPaymentMethodEntity>();
+
+        public async Task<IList<StoredPaymentMethodEntity>> GetStoredPaymentMethodsByIdsAsync(IList<string> ids, string responseGroup = null)
+        {
+            return await StoredPaymentMethods.Where(x => ids.Contains(x.Id)).ToListAsync();
+        }
+
+        public IQueryable<PaymentConsentEntity> PaymentConsents => DbContext.Set<PaymentConsentEntity>();
+
+        public async Task<IList<PaymentConsentEntity>> GetPaymentConsentsByIdsAsync(IList<string> ids, string responseGroup = null)
+        {
+            return await PaymentConsents.Where(x => ids.Contains(x.Id)).ToListAsync();
+        }
     }
 }
