@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using VirtoCommerce.PaymentModule.Core.Events;
 using VirtoCommerce.PaymentModule.Core.Model;
@@ -22,6 +23,7 @@ namespace VirtoCommerce.PaymentModule.Data.Services
     {
         protected const string DefaultSortColumn = nameof(StorePaymentMethodEntity.Code);
 
+        private readonly Func<IPaymentRepository> _repositoryFactory;
         private readonly ISettingsManager _settingsManager;
         private readonly IEventPublisher _eventPublisher;
 
@@ -34,6 +36,7 @@ namespace VirtoCommerce.PaymentModule.Data.Services
             IEventPublisher eventPublisher)
            : base(repositoryFactory, platformMemoryCache, crudService, crudOptions)
         {
+            _repositoryFactory = repositoryFactory;
             _settingsManager = settingsManager;
             _eventPublisher = eventPublisher;
         }
@@ -100,60 +103,91 @@ namespace VirtoCommerce.PaymentModule.Data.Services
             // throw this event in case there are modules than need some special work done before instancing payment methods (NativePaymentMethods for example)
             await _eventPublisher.Publish(new PaymentMethodInstancingEvent());
 
-            var tmpSkip = Math.Min(result.TotalCount, criteria.Skip);
-            var tmpTake = Math.Min(criteria.Take, Math.Max(0, result.TotalCount - criteria.Skip));
-            criteria.Skip -= tmpSkip;
-            criteria.Take -= tmpTake;
-
-            if (criteria.Take > 0 && !criteria.WithoutTransient)
+            if (criteria.WithoutTransient)
             {
-                // Plain LINQ-to-objects: composing operators on an in-memory IQueryable
-                // (EnumerableQuery) rebuilds and compiles an expression tree on every
-                // enumeration; this method runs on every cart/checkout read, and the per-call
-                // compilation convoys on runtime-wide locks under concurrent requests.
-                var transientMethods = AbstractTypeFactory<PaymentMethod>.AllTypeInfos
-                    .Select(x => AbstractTypeFactory<PaymentMethod>.TryCreateInstance(x.Type.Name));
-
-                if (!string.IsNullOrEmpty(criteria.Keyword))
-                {
-                    transientMethods = transientMethods.Where(x => x.Code.Contains(criteria.Keyword));
-                }
-
-                if (criteria.IsActive.HasValue)
-                {
-                    transientMethods = transientMethods.Where(x => x.IsActive == criteria.IsActive.Value);
-                }
-
-                var persistentMethodTypes = result.Results.Select(x => x.GetType()).ToHashSet();
-                var filteredTransientMethods = transientMethods
-                    .Where(x => !persistentMethodTypes.Contains(x.GetType()))
-                    .ToList();
-
-                result.TotalCount += filteredTransientMethods.Count;
-
-                var pagedTransientMethods = filteredTransientMethods
-                    .Skip(criteria.Skip)
-                    .Take(criteria.Take)
-                    .ToList();
-
-                foreach (var transientMethod in pagedTransientMethods)
-                {
-                    await _settingsManager.DeepLoadSettingsAsync(transientMethod);
-                }
-
-                var allMethods = result.Results.Concat(pagedTransientMethods);
-
-                var sortInfos = BuildSortExpression(criteria);
-
-                // Arbitrary sort columns (admin, cold) are worth OrderBySortInfos' compile; the default
-                // order is not. Decided from what BuildSortExpression returned, so overriding that seam
-                // still changes the sort.
-                result.Results = IsSingleAscendingDefaultSort(sortInfos)
-                    ? allMethods.OrderBy(x => x.Code).ToList()
-                    : allMethods.AsQueryable().OrderBySortInfos(sortInfos).ToList();
+                return result;
             }
 
+            // Plain LINQ-to-objects: composing operators on an in-memory IQueryable
+            // (EnumerableQuery) rebuilds and compiles an expression tree on every
+            // enumeration; this method runs on every cart/checkout read, and the per-call
+            // compilation convoys on runtime-wide locks under concurrent requests.
+            var transientMethods = AbstractTypeFactory<PaymentMethod>.AllTypeInfos
+                .Select(x => AbstractTypeFactory<PaymentMethod>.TryCreateInstance(x.Type.Name));
+
+            if (!string.IsNullOrEmpty(criteria.Keyword))
+            {
+                transientMethods = transientMethods.Where(x => x.Code.Contains(criteria.Keyword));
+            }
+
+            if (criteria.IsActive.HasValue)
+            {
+                transientMethods = transientMethods.Where(x => x.IsActive == criteria.IsActive.Value);
+            }
+
+            var candidates = transientMethods.ToList();
+
+            // The list is the saved methods, then a new instance of every method that is not saved. A page that does not
+            // hold every saved method cannot tell from its own rows which methods are saved, so it asks the database.
+            var savedCount = result.TotalCount;
+            var savedMethodTypes = candidates.Count == 0 || result.Results.Count == savedCount
+                ? result.Results.Select(x => x.GetType()).ToHashSet()
+                : await GetSavedMethodTypesAsync(criteria);
+
+            var filteredTransientMethods = candidates
+                .Where(x => !savedMethodTypes.Contains(x.GetType()))
+                .ToList();
+
+            // Counted on every page, also on a page full of saved methods, so that the total is the same on every page.
+            result.TotalCount += filteredTransientMethods.Count;
+
+            // Local copies: the criteria belongs to the caller, and SearchBatchesAsync reuses it for the next page.
+            var skip = Math.Max(0, criteria.Skip - savedCount);
+            var take = criteria.Take - Math.Min(criteria.Take, Math.Max(0, savedCount - criteria.Skip));
+
+            if (take <= 0)
+            {
+                return result;
+            }
+
+            var pagedTransientMethods = filteredTransientMethods
+                .Skip(skip)
+                .Take(take)
+                .ToList();
+
+            foreach (var transientMethod in pagedTransientMethods)
+            {
+                await _settingsManager.DeepLoadSettingsAsync(transientMethod);
+            }
+
+            var allMethods = result.Results.Concat(pagedTransientMethods);
+
+            var sortInfos = BuildSortExpression(criteria);
+
+            // Arbitrary sort columns (admin, cold) are worth OrderBySortInfos' compile; the default
+            // order is not. Decided from what BuildSortExpression returned, so overriding that seam
+            // still changes the sort.
+            result.Results = IsSingleAscendingDefaultSort(sortInfos)
+                ? allMethods.OrderBy(x => x.Code).ToList()
+                : allMethods.AsQueryable().OrderBySortInfos(sortInfos).ToList();
+
             return result;
+        }
+
+        // The types of every saved method the criteria finds, on any page: the type a saved row loads as
+        // (PaymentMethodsService.ToModel).
+        protected virtual async Task<ISet<Type>> GetSavedMethodTypesAsync(PaymentMethodsSearchCriteria criteria)
+        {
+            using var repository = _repositoryFactory();
+
+            var typeNames = await BuildQuery(repository, criteria)
+                .Select(x => string.IsNullOrEmpty(x.TypeName) ? x.Code : x.TypeName)
+                .Distinct()
+                .ToListAsync();
+
+            return typeNames
+                .Select(x => AbstractTypeFactory<PaymentMethod>.TryCreateInstance(x).GetType())
+                .ToHashSet();
         }
     }
 }
