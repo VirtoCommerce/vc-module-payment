@@ -111,10 +111,7 @@ namespace VirtoCommerce.PaymentModule.Data.Services
 
             if (filteredTransientMethods.Count > 0)
             {
-                // A page without every saved row cannot tell from its own rows which methods are saved.
-                var savedMethodTypes = result.Results.Count == savedCount
-                    ? result.Results.Select(x => x.GetType()).ToHashSet()
-                    : await GetSavedMethodTypesAsync(criteria, savedCount);
+                var savedMethodTypes = await GetSavedMethodTypesAsync(result, criteria);
 
                 filteredTransientMethods = filteredTransientMethods
                     .Where(x => !savedMethodTypes.Contains(x.GetType()))
@@ -177,12 +174,18 @@ namespace VirtoCommerce.PaymentModule.Data.Services
             return Task.FromResult<IList<PaymentMethod>>(transientMethods.ToList());
         }
 
-        // The types of all saved methods for the criteria, from one cached search of the saved rows.
-        protected virtual async Task<ISet<Type>> GetSavedMethodTypesAsync(PaymentMethodsSearchCriteria criteria, int savedCount)
+        // The types of all saved methods for the criteria. The result holds the page's saved rows, and its TotalCount is
+        // still their count: a page without every saved row cannot tell from its own rows which methods are saved.
+        protected virtual async Task<ISet<Type>> GetSavedMethodTypesAsync(PaymentMethodsSearchResult result, PaymentMethodsSearchCriteria criteria)
         {
+            if (result.Results.Count == result.TotalCount)
+            {
+                return result.Results.Select(x => x.GetType()).ToHashSet();
+            }
+
             var savedCriteria = criteria.CloneTyped();
             savedCriteria.Skip = 0;
-            savedCriteria.Take = savedCount;
+            savedCriteria.Take = result.TotalCount;
             savedCriteria.WithoutTransient = true;
 
             var savedMethods = await base.SearchAsync(savedCriteria, clone: false);

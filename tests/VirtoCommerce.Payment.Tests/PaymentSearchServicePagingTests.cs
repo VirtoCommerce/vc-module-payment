@@ -2,11 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
 using VirtoCommerce.PaymentModule.Core.Model;
 using VirtoCommerce.PaymentModule.Core.Model.Search;
 using VirtoCommerce.PaymentModule.Core.Services;
 using VirtoCommerce.PaymentModule.Data.Model;
+using VirtoCommerce.PaymentModule.Data.Repositories;
+using VirtoCommerce.PaymentModule.Data.Services;
+using VirtoCommerce.Platform.Core.Caching;
 using VirtoCommerce.Platform.Core.Common;
+using VirtoCommerce.Platform.Core.Events;
+using VirtoCommerce.Platform.Core.GenericCrud;
+using VirtoCommerce.Platform.Core.Settings;
 using Xunit;
 
 namespace VirtoCommerce.Payment.Tests;
@@ -53,13 +60,15 @@ public class PaymentSearchServicePagingTests
     {
         // Arrange
         using var types = new RegisteredMethodTypes(_methodTypes.Take(registered));
-        var searchService = CreateSearchService(CreateSavedRows(saved, active: saved));
+        var rows = CreateSavedRows(saved, active: saved);
+        var searchService = CreateSearchService(rows);
 
         // Act
         var methods = await searchService.SearchAllAsync(new PaymentMethodsSearchCriteria { StoreId = StoreId });
 
         // Assert
         Assert.Equal(_methodTypes.Take(registered).Select(x => x.Name), methods.Select(x => x.Code).Order());
+        Assert.Equal(rows.Select(x => x.Id), methods.Where(x => x.Id != null).Select(x => x.Id).Order());
     }
 
     // All methods saved, the first ones active. Unsaved methods start inactive, so none is added.
@@ -74,13 +83,32 @@ public class PaymentSearchServicePagingTests
     {
         // Arrange
         using var types = new RegisteredMethodTypes(_methodTypes.Take(registered));
-        var searchService = CreateSearchService(CreateSavedRows(registered, active));
+        var rows = CreateSavedRows(registered, active);
+        var searchService = CreateSearchService(rows);
 
         // Act
         var methods = await searchService.SearchAllAsync(new PaymentMethodsSearchCriteria { StoreId = StoreId, IsActive = true });
 
         // Assert
         Assert.Equal(_methodTypes.Take(active).Select(x => x.Name), methods.Select(x => x.Code).Order());
+        Assert.Equal(rows.Where(x => x.IsActive).Select(x => x.Id), methods.Select(x => x.Id).Order());
+    }
+
+    [Theory]
+    [InlineData(12, 11)]
+    [InlineData(25, 21)]
+    public async Task SearchAllAsync_WithoutTransient_ReturnsEachSavedMethodOnce(int registered, int saved)
+    {
+        // Arrange
+        using var types = new RegisteredMethodTypes(_methodTypes.Take(registered));
+        var rows = CreateSavedRows(saved, saved);
+        var searchService = CreateSearchService(rows);
+
+        // Act
+        var methods = await searchService.SearchAllAsync(new PaymentMethodsSearchCriteria { StoreId = StoreId, WithoutTransient = true });
+
+        // Assert
+        Assert.Equal(rows.Select(x => x.Id), methods.Select(x => x.Id).Order());
     }
 
     // SearchBatchesAsync reuses the criteria for every page.
@@ -110,8 +138,10 @@ public class PaymentSearchServicePagingTests
     {
         // Arrange
         using var types = new RegisteredMethodTypes(_methodTypes.Take(registered));
-        var searchService = CreateSearchService(CreateSavedRows(saved, saved));
+        var rows = CreateSavedRows(saved, saved);
+        var searchService = CreateSearchService(rows);
         var codes = new List<string>();
+        var ids = new List<string>();
         var totals = new List<int>();
 
         // Act
@@ -119,11 +149,13 @@ public class PaymentSearchServicePagingTests
         {
             var result = await searchService.SearchAsync(new PaymentMethodsSearchCriteria { StoreId = StoreId, Skip = skip, Take = _pageSize });
             codes.AddRange(result.Results.Select(x => x.Code));
+            ids.AddRange(result.Results.Where(x => x.Id != null).Select(x => x.Id));
             totals.Add(result.TotalCount);
         }
 
         // Assert
         Assert.Equal(_methodTypes.Take(registered).Select(x => x.Name), codes.Order());
+        Assert.Equal(rows.Select(x => x.Id), ids.Order());
         Assert.All(totals, x => Assert.Equal(registered, x));
     }
 
@@ -156,6 +188,42 @@ public class PaymentSearchServicePagingTests
         // Assert
         Assert.Equal(rows.Count, result.TotalCount);
         Assert.Equal(rows.Select(x => x.Id), result.Results.Select(x => x.Id));
+    }
+
+    [Fact]
+    public async Task SearchAsync_GetTransientMethodsAsyncOverride_ChangesTheUnsavedMethods()
+    {
+        // Arrange
+        using var types = new RegisteredMethodTypes(_methodTypes.Take(12));
+        var (_, searchService) = PaymentSearchServiceUnitTests.CreateService(
+            PaymentSearchServiceUnitTests.CreateRepositoryMock(CreateSavedRows(3, 3)),
+            (repositoryFactory, cache, crudService, crudOptions, settingsManager, eventPublisher) =>
+                new CodesSearchService(repositoryFactory, cache, crudService, crudOptions, settingsManager, eventPublisher));
+
+        // Act
+        var result = await searchService.SearchAsync(new PaymentMethodsSearchCriteria { StoreId = StoreId, Codes = ["M02", "M05"] });
+
+        // Assert
+        Assert.Equal(["M02", "M05"], result.Results.Select(x => x.Code));
+        Assert.Equal(2, result.TotalCount);
+    }
+
+    [Fact]
+    public async Task SearchAsync_GetSavedMethodTypesAsyncOverride_RunsOnAPageWithEverySavedRow()
+    {
+        // Arrange
+        using var types = new RegisteredMethodTypes(_methodTypes.Take(12));
+        var (_, searchService) = PaymentSearchServiceUnitTests.CreateService(
+            PaymentSearchServiceUnitTests.CreateRepositoryMock(CreateSavedRows(3, 3)),
+            (repositoryFactory, cache, crudService, crudOptions, settingsManager, eventPublisher) =>
+                new M12SavedSearchService(repositoryFactory, cache, crudService, crudOptions, settingsManager, eventPublisher));
+
+        // Act
+        var result = await searchService.SearchAsync(new PaymentMethodsSearchCriteria { StoreId = StoreId });
+
+        // Assert
+        Assert.Equal(_methodTypes.Take(11).Select(x => x.Name), result.Results.Select(x => x.Code));
+        Assert.Equal(11, result.TotalCount);
     }
 
     private static List<StorePaymentMethodEntity> CreateSavedRows(int saved, int active)
@@ -244,6 +312,43 @@ public class PaymentSearchServicePagingTests
             {
                 AbstractTypeFactory<PaymentMethod>.RemoveType(typeInfo.Type);
             }
+        }
+    }
+
+    // Lists only the unsaved methods whose codes the criteria asks for.
+    private sealed class CodesSearchService(
+        Func<IPaymentRepository> repositoryFactory,
+        IPlatformMemoryCache platformMemoryCache,
+        IPaymentMethodsService crudService,
+        IOptions<CrudOptions> crudOptions,
+        ISettingsManager settingsManager,
+        IEventPublisher eventPublisher)
+        : PaymentMethodsSearchService(repositoryFactory, platformMemoryCache, crudService, crudOptions, settingsManager, eventPublisher)
+    {
+        protected override async Task<IList<PaymentMethod>> GetTransientMethodsAsync(PaymentMethodsSearchCriteria criteria)
+        {
+            var methods = await base.GetTransientMethodsAsync(criteria);
+
+            return methods.Where(x => criteria.Codes.Contains(x.Code)).ToList();
+        }
+    }
+
+    // Counts M12 as saved.
+    private sealed class M12SavedSearchService(
+        Func<IPaymentRepository> repositoryFactory,
+        IPlatformMemoryCache platformMemoryCache,
+        IPaymentMethodsService crudService,
+        IOptions<CrudOptions> crudOptions,
+        ISettingsManager settingsManager,
+        IEventPublisher eventPublisher)
+        : PaymentMethodsSearchService(repositoryFactory, platformMemoryCache, crudService, crudOptions, settingsManager, eventPublisher)
+    {
+        protected override async Task<ISet<Type>> GetSavedMethodTypesAsync(PaymentMethodsSearchResult result, PaymentMethodsSearchCriteria criteria)
+        {
+            var types = await base.GetSavedMethodTypesAsync(result, criteria);
+            types.Add(typeof(M12));
+
+            return types;
         }
     }
 

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,6 +14,7 @@ using VirtoCommerce.PaymentModule.Data.Model;
 using VirtoCommerce.PaymentModule.Data.Repositories;
 using VirtoCommerce.PaymentModule.Data.Services;
 using VirtoCommerce.Platform.Caching;
+using VirtoCommerce.Platform.Core.Caching;
 using VirtoCommerce.Platform.Core.Events;
 using VirtoCommerce.Platform.Core.GenericCrud;
 using VirtoCommerce.Platform.Core.Settings;
@@ -64,7 +66,9 @@ public class PaymentSearchServiceUnitTests
         return paymentRepository;
     }
 
-    internal static (IPaymentMethodsRegistrar, PaymentMethodsSearchService) CreateService(Mock<IPaymentRepository> paymentRepositoryMock)
+    internal static (IPaymentMethodsRegistrar, PaymentMethodsSearchService) CreateService(
+        Mock<IPaymentRepository> paymentRepositoryMock,
+        Func<Func<IPaymentRepository>, IPlatformMemoryCache, IPaymentMethodsService, IOptions<CrudOptions>, ISettingsManager, IEventPublisher, PaymentMethodsSearchService> createSearchService = null)
     {
         var factory = () => paymentRepositoryMock.Object;
 
@@ -76,7 +80,9 @@ public class PaymentSearchServiceUnitTests
         var crudService = new PaymentMethodsService(factory, platformMemoryCache, eventPublisher.Object, settingsManager.Object);
 
         var crudOptions = Options.Create(new CrudOptions());
-        var searchService = new PaymentMethodsSearchService(factory, platformMemoryCache, crudService, crudOptions, settingsManager.Object, eventPublisher.Object);
+        var searchService = createSearchService != null
+            ? createSearchService(factory, platformMemoryCache, crudService, crudOptions, settingsManager.Object, eventPublisher.Object)
+            : new PaymentMethodsSearchService(factory, platformMemoryCache, crudService, crudOptions, settingsManager.Object, eventPublisher.Object);
 
         return (crudService, searchService);
     }
