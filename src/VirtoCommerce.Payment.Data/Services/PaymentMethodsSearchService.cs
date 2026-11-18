@@ -105,13 +105,13 @@ namespace VirtoCommerce.PaymentModule.Data.Services
                 return result;
             }
 
-            // The list is the saved methods, then a new instance of every method that is not saved. A page that does not
-            // hold every saved method cannot tell from its own rows which methods are saved, so it searches them all.
+            // The saved methods first, then a new instance of each method that is not saved.
             var filteredTransientMethods = await GetTransientMethodsAsync(criteria);
             var savedCount = result.TotalCount;
 
             if (filteredTransientMethods.Count > 0)
             {
+                // A page without every saved row cannot tell from its own rows which methods are saved.
                 var savedMethodTypes = result.Results.Count == savedCount
                     ? result.Results.Select(x => x.GetType()).ToHashSet()
                     : await GetSavedMethodTypesAsync(criteria, savedCount);
@@ -121,11 +121,10 @@ namespace VirtoCommerce.PaymentModule.Data.Services
                     .ToList();
             }
 
-            // Counted on every page, also on a page full of saved methods, so that the total is the same on every page.
+            // Counted on every page, so the total is the same on all pages.
             result.TotalCount += filteredTransientMethods.Count;
 
-            // The page's window into the unsaved methods. In locals: the criteria belongs to the caller, and
-            // SearchBatchesAsync reuses it for the next page.
+            // Locals, not the criteria: SearchBatchesAsync reuses the criteria for the next page.
             var skip = Math.Max(0, criteria.Skip - savedCount);
             var take = criteria.Take - Math.Max(0, savedCount - criteria.Skip);
 
@@ -158,15 +157,10 @@ namespace VirtoCommerce.PaymentModule.Data.Services
             return result;
         }
 
-        // A new instance of every registered payment method that the criteria's keyword and IsActive let through, saved or
-        // not: the search then drops the ones the store has saved. Override to change which registered methods can be
-        // listed as not saved.
+        // A new instance of each registered method that matches the keyword and IsActive, saved or not.
         protected virtual Task<IList<PaymentMethod>> GetTransientMethodsAsync(PaymentMethodsSearchCriteria criteria)
         {
-            // Plain LINQ-to-objects: composing operators on an in-memory IQueryable
-            // (EnumerableQuery) rebuilds and compiles an expression tree on every
-            // enumeration; this method runs on every cart/checkout read, and the per-call
-            // compilation convoys on runtime-wide locks under concurrent requests.
+            // Not .AsQueryable().Where(...): that recompiles the expression tree per enumeration, a lock convoy under load.
             var transientMethods = AbstractTypeFactory<PaymentMethod>.AllTypeInfos
                 .Select(x => AbstractTypeFactory<PaymentMethod>.TryCreateInstance(x.Type.Name));
 
@@ -183,8 +177,7 @@ namespace VirtoCommerce.PaymentModule.Data.Services
             return Task.FromResult<IList<PaymentMethod>>(transientMethods.ToList());
         }
 
-        // The types of every saved method the criteria finds, on any page: one search of the saved methods only, cached
-        // like the pages, so the types are the ones the saved rows load as.
+        // The types of all saved methods for the criteria, from one cached search of the saved rows.
         protected virtual async Task<ISet<Type>> GetSavedMethodTypesAsync(PaymentMethodsSearchCriteria criteria, int savedCount)
         {
             var savedCriteria = criteria.CloneTyped();

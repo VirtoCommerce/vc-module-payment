@@ -11,16 +11,14 @@ using Xunit;
 
 namespace VirtoCommerce.Payment.Tests;
 
-// The search lists a store's saved payment methods first, then a new instance of every registered method the store has
-// not saved. These tests page through that list: they register their own method types, save the first ones for one
-// store, and make the first saved ones active.
+// The search lists a store's saved methods, then a new instance of each unsaved one; these tests page through that list.
 [Collection(PaymentMethodTypesCollection.Name)]
 public class PaymentSearchServicePagingTests
 {
     private const string StoreId = "store-1";
     private const int MaxPages = 100;
 
-    // The default page size of a search, which the callers of SearchAllAsync keep.
+    // The default Take, which SearchAllAsync callers keep.
     private static readonly int _pageSize = new PaymentMethodsSearchCriteria().Take;
 
     // Distinct classes, because AbstractTypeFactory keys the types by name.
@@ -64,8 +62,7 @@ public class PaymentSearchServicePagingTests
         Assert.Equal(_methodTypes.Take(registered).Select(x => x.Name), methods.Select(x => x.Code).Order());
     }
 
-    // Every registered method is saved, and the first ones are active. A method the store has not saved is inactive, so
-    // none is added.
+    // All methods saved, the first ones active. Unsaved methods start inactive, so none is added.
     [Theory]
     [InlineData(12, 9)]
     [InlineData(12, 10)]
@@ -86,7 +83,7 @@ public class PaymentSearchServicePagingTests
         Assert.Equal(_methodTypes.Take(active).Select(x => x.Name), methods.Select(x => x.Code).Order());
     }
 
-    // SearchBatchesAsync passes one criteria to every page, so the search must leave it as it was.
+    // SearchBatchesAsync reuses the criteria for every page.
     [Theory]
     [InlineData(0, 20)]
     [InlineData(10, 10)]
@@ -105,7 +102,7 @@ public class PaymentSearchServicePagingTests
         Assert.Equal((skip, take), (criteria.Skip, criteria.Take));
     }
 
-    // Paging with a new criteria for each page, as the back office's list does.
+    // A new criteria per page, as the back office's list does.
     [Theory]
     [InlineData(25, 3)]
     [InlineData(25, 21)]
@@ -130,7 +127,6 @@ public class PaymentSearchServicePagingTests
         Assert.All(totals, x => Assert.Equal(registered, x));
     }
 
-    // A count-only search counts the methods the store has not saved too, as the total of every page does.
     [Fact]
     public async Task SearchAsync_TakeZero_CountsTheUnsavedMethodsToo()
     {
@@ -146,7 +142,6 @@ public class PaymentSearchServicePagingTests
         Assert.Empty(result.Results);
     }
 
-    // WithoutTransient returns the saved methods only, and counts only them.
     [Fact]
     public async Task SearchAsync_WithoutTransient_ReturnsOnlyTheSavedMethods()
     {
@@ -201,7 +196,7 @@ public class PaymentSearchServicePagingTests
         }
     }
 
-    // Swaps the registered payment method types for the given ones, and puts the previous registrations back on dispose.
+    // Registers only the given method types, and restores the previous registrations on dispose.
     private sealed class RegisteredMethodTypes : IDisposable
     {
         private readonly IList<TypeInfo<PaymentMethod>> _previous = AbstractTypeFactory<PaymentMethod>.AllTypeInfos.ToList();

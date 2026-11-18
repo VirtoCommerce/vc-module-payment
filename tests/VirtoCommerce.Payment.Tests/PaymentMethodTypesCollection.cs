@@ -2,8 +2,7 @@ using Xunit;
 
 namespace VirtoCommerce.Payment.Tests;
 
-// Tests that swap the payment method types registered in the static AbstractTypeFactory<PaymentMethod> run in this
-// collection, which never runs in parallel with other tests.
+// For tests that swap the static AbstractTypeFactory<PaymentMethod> registrations: never runs in parallel.
 [CollectionDefinition(Name, DisableParallelization = true)]
 public class PaymentMethodTypesCollection
 {
