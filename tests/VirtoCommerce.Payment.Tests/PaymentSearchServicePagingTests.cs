@@ -2,37 +2,26 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using MockQueryable.Moq;
-using Moq;
 using VirtoCommerce.PaymentModule.Core.Model;
 using VirtoCommerce.PaymentModule.Core.Model.Search;
 using VirtoCommerce.PaymentModule.Core.Services;
 using VirtoCommerce.PaymentModule.Data.Model;
-using VirtoCommerce.PaymentModule.Data.Repositories;
-using VirtoCommerce.PaymentModule.Data.Services;
-using VirtoCommerce.Platform.Caching;
 using VirtoCommerce.Platform.Core.Common;
-using VirtoCommerce.Platform.Core.Events;
-using VirtoCommerce.Platform.Core.GenericCrud;
-using VirtoCommerce.Platform.Core.Settings;
 using Xunit;
 
 namespace VirtoCommerce.Payment.Tests;
 
 // The search lists a store's saved payment methods first, then a new instance of every registered method the store has
-// not saved. These tests page through that list: they register R method types of their own, save the first S of them
-// for one store, and make A of the saved ones active.
+// not saved. These tests page through that list: they register their own method types, save the first ones for one
+// store, and make the first saved ones active.
 [Collection(PaymentMethodTypesCollection.Name)]
 public class PaymentSearchServicePagingTests
 {
     private const string StoreId = "store-1";
-    private const int PageSize = 20;
-
-    // A search that never ends fails the test instead of hanging it.
     private const int MaxPages = 100;
+
+    // The default page size of a search, which the callers of SearchAllAsync keep.
+    private static readonly int _pageSize = new PaymentMethodsSearchCriteria().Take;
 
     // Distinct classes, because AbstractTypeFactory keys the types by name.
     private static readonly Type[] _methodTypes =
@@ -42,56 +31,59 @@ public class PaymentSearchServicePagingTests
         typeof(M21), typeof(M22), typeof(M23), typeof(M24), typeof(M25),
     ];
 
-    // R registered, S saved, A active among the saved, and whether the criteria asks for IsActive = true.
-    public static TheoryData<int, int, int, bool> SearchAllCases => new()
-    {
-        // All methods fit on the first page (S + R <= 20)
-        { 12, 0, 0, false },
-        { 12, 4, 4, false },
-        { 12, 5, 5, false },
-        { 12, 6, 6, false },
-        { 12, 8, 8, false },
-        { 10, 10, 10, false },
-        // The second page used to start too early
-        { 12, 9, 9, false },
-        { 11, 10, 10, false },
-        { 12, 10, 10, false },
-        { 12, 11, 11, false },
-        { 12, 12, 12, false },
-        // More methods than one page holds
-        { 25, 0, 0, false },
-        { 25, 3, 3, false },
-        { 25, 10, 10, false },
-        { 25, 20, 20, false },
-        { 25, 21, 21, false },
-        // Active methods only: the methods a store has not saved are inactive
-        { 12, 12, 9, true },
-        { 12, 12, 10, true },
-        { 12, 12, 11, true },
-        { 12, 12, 12, true },
-        { 25, 25, 20, true },
-        { 25, 25, 21, true },
-    };
-
     [Theory]
-    [MemberData(nameof(SearchAllCases))]
-    public async Task SearchAllAsync_ReturnsEachMethodOnce(int registered, int saved, int active, bool onlyActive)
+    // All methods fit on the first page (saved + registered <= 20)
+    [InlineData(12, 0)]
+    [InlineData(12, 4)]
+    [InlineData(12, 5)]
+    [InlineData(12, 6)]
+    [InlineData(12, 8)]
+    [InlineData(10, 10)]
+    // The second page used to start too early
+    [InlineData(12, 9)]
+    [InlineData(11, 10)]
+    [InlineData(12, 10)]
+    [InlineData(12, 11)]
+    [InlineData(12, 12)]
+    // More methods than one page holds
+    [InlineData(25, 0)]
+    [InlineData(25, 3)]
+    [InlineData(25, 10)]
+    [InlineData(25, 20)]
+    [InlineData(25, 21)]
+    public async Task SearchAllAsync_ReturnsEachRegisteredMethodOnce(int registered, int saved)
     {
         // Arrange
         using var types = new RegisteredMethodTypes(_methodTypes.Take(registered));
-        var rows = CreateSavedRows(saved, active);
-        IPaymentMethodsSearchService searchService = new PageLimitedSearchService(CreateSearchService(rows), MaxPages);
-        var criteria = new PaymentMethodsSearchCriteria { StoreId = StoreId, IsActive = onlyActive ? true : null };
+        var searchService = CreateSearchService(CreateSavedRows(saved, active: saved));
 
         // Act
-        var methods = await searchService.SearchAllAsync(criteria);
+        var methods = await searchService.SearchAllAsync(new PaymentMethodsSearchCriteria { StoreId = StoreId });
 
         // Assert
-        var expected = onlyActive
-            ? rows.Where(x => x.IsActive).Select(x => x.Code)
-            : _methodTypes.Take(registered).Select(x => x.Name);
+        Assert.Equal(_methodTypes.Take(registered).Select(x => x.Name), methods.Select(x => x.Code).Order());
+    }
 
-        Assert.Equal(expected.Order(), methods.Select(x => x.Code).Order());
+    // Every registered method is saved, and the first ones are active. A method the store has not saved is inactive, so
+    // none is added.
+    [Theory]
+    [InlineData(12, 9)]
+    [InlineData(12, 10)]
+    [InlineData(12, 11)]
+    [InlineData(12, 12)]
+    [InlineData(25, 20)]
+    [InlineData(25, 21)]
+    public async Task SearchAllAsync_ActiveOnly_ReturnsEachActiveMethodOnce(int registered, int active)
+    {
+        // Arrange
+        using var types = new RegisteredMethodTypes(_methodTypes.Take(registered));
+        var searchService = CreateSearchService(CreateSavedRows(registered, active));
+
+        // Act
+        var methods = await searchService.SearchAllAsync(new PaymentMethodsSearchCriteria { StoreId = StoreId, IsActive = true });
+
+        // Assert
+        Assert.Equal(_methodTypes.Take(active).Select(x => x.Name), methods.Select(x => x.Code).Order());
     }
 
     // SearchBatchesAsync passes one criteria to every page, so the search must leave it as it was.
@@ -126,9 +118,9 @@ public class PaymentSearchServicePagingTests
         var totals = new List<int>();
 
         // Act
-        for (var skip = 0; skip < registered; skip += PageSize)
+        for (var skip = 0; skip < registered; skip += _pageSize)
         {
-            var result = await searchService.SearchAsync(new PaymentMethodsSearchCriteria { StoreId = StoreId, Skip = skip, Take = PageSize });
+            var result = await searchService.SearchAsync(new PaymentMethodsSearchCriteria { StoreId = StoreId, Skip = skip, Take = _pageSize });
             codes.AddRange(result.Results.Select(x => x.Code));
             totals.Add(result.TotalCount);
         }
@@ -153,38 +145,23 @@ public class PaymentSearchServicePagingTests
             .ToList();
     }
 
-    private static PaymentMethodsSearchService CreateSearchService(List<StorePaymentMethodEntity> rows)
+    private static IPaymentMethodsSearchService CreateSearchService(List<StorePaymentMethodEntity> rows)
     {
-        var paymentMethodsDbSet = rows.BuildMockDbSet();
+        var (_, searchService) = PaymentSearchServiceUnitTests.CreateService(PaymentSearchServiceUnitTests.CreateRepositoryMock(rows));
 
-        var repository = new Mock<IPaymentRepository>();
-        repository.Setup(x => x.PaymentMethods).Returns(paymentMethodsDbSet.Object);
-        repository
-            .Setup(x => x.GetByIdsAsync(It.IsAny<IList<string>>(), It.IsAny<string>()))
-            .ReturnsAsync((IList<string> ids, string _) => rows.Where(x => ids.Contains(x.Id)).ToList());
-
-        IPaymentRepository RepositoryFactory() => repository.Object;
-
-        var memoryCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
-        var platformMemoryCache = new PlatformMemoryCache(memoryCache, Options.Create(new CachingOptions()), new Mock<ILogger<PlatformMemoryCache>>().Object);
-
-        var eventPublisher = new Mock<IEventPublisher>();
-        var settingsManager = new Mock<ISettingsManager>();
-        var crudService = new PaymentMethodsService(RepositoryFactory, platformMemoryCache, eventPublisher.Object, settingsManager.Object);
-
-        return new PaymentMethodsSearchService(RepositoryFactory, platformMemoryCache, crudService, Options.Create(new CrudOptions()), settingsManager.Object, eventPublisher.Object);
+        return new PageLimitedSearchService(searchService);
     }
 
-    // Stops a search that asks for more pages than any of these cases needs.
-    private sealed class PageLimitedSearchService(IPaymentMethodsSearchService searchService, int maxPages) : IPaymentMethodsSearchService
+    // Fails a search that never ends, instead of hanging the test.
+    private sealed class PageLimitedSearchService(IPaymentMethodsSearchService searchService) : IPaymentMethodsSearchService
     {
         private int _pages;
 
         public Task<PaymentMethodsSearchResult> SearchAsync(PaymentMethodsSearchCriteria criteria, bool clone = true)
         {
-            if (++_pages > maxPages)
+            if (++_pages > MaxPages)
             {
-                throw new InvalidOperationException($"The search did not stop after {maxPages} pages.");
+                throw new InvalidOperationException($"The search did not stop after {MaxPages} pages.");
             }
 
             return searchService.SearchAsync(criteria, clone);

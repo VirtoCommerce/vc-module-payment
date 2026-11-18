@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using VirtoCommerce.PaymentModule.Core.Events;
 using VirtoCommerce.PaymentModule.Core.Model;
@@ -23,7 +22,6 @@ namespace VirtoCommerce.PaymentModule.Data.Services
     {
         protected const string DefaultSortColumn = nameof(StorePaymentMethodEntity.Code);
 
-        private readonly Func<IPaymentRepository> _repositoryFactory;
         private readonly ISettingsManager _settingsManager;
         private readonly IEventPublisher _eventPublisher;
 
@@ -36,7 +34,6 @@ namespace VirtoCommerce.PaymentModule.Data.Services
             IEventPublisher eventPublisher)
            : base(repositoryFactory, platformMemoryCache, crudService, crudOptions)
         {
-            _repositoryFactory = repositoryFactory;
             _settingsManager = settingsManager;
             _eventPublisher = eventPublisher;
         }
@@ -125,25 +122,27 @@ namespace VirtoCommerce.PaymentModule.Data.Services
                 transientMethods = transientMethods.Where(x => x.IsActive == criteria.IsActive.Value);
             }
 
-            var candidates = transientMethods.ToList();
-
             // The list is the saved methods, then a new instance of every method that is not saved. A page that does not
-            // hold every saved method cannot tell from its own rows which methods are saved, so it asks the database.
+            // hold every saved method cannot tell from its own rows which methods are saved, so it searches them all.
+            var filteredTransientMethods = transientMethods.ToList();
             var savedCount = result.TotalCount;
-            var savedMethodTypes = candidates.Count == 0 || result.Results.Count == savedCount
-                ? result.Results.Select(x => x.GetType()).ToHashSet()
-                : await GetSavedMethodTypesAsync(criteria);
 
-            var filteredTransientMethods = candidates
-                .Where(x => !savedMethodTypes.Contains(x.GetType()))
-                .ToList();
+            if (filteredTransientMethods.Count > 0)
+            {
+                var savedMethodTypes = result.Results.Count == savedCount
+                    ? result.Results.Select(x => x.GetType()).ToHashSet()
+                    : await GetSavedMethodTypesAsync(criteria, savedCount);
+
+                filteredTransientMethods.RemoveAll(x => savedMethodTypes.Contains(x.GetType()));
+            }
 
             // Counted on every page, also on a page full of saved methods, so that the total is the same on every page.
             result.TotalCount += filteredTransientMethods.Count;
 
-            // Local copies: the criteria belongs to the caller, and SearchBatchesAsync reuses it for the next page.
+            // The page's window into the unsaved methods. In locals: the criteria belongs to the caller, and
+            // SearchBatchesAsync reuses it for the next page.
             var skip = Math.Max(0, criteria.Skip - savedCount);
-            var take = criteria.Take - Math.Min(criteria.Take, Math.Max(0, savedCount - criteria.Skip));
+            var take = criteria.Take - Math.Max(0, savedCount - criteria.Skip);
 
             if (take <= 0)
             {
@@ -174,20 +173,18 @@ namespace VirtoCommerce.PaymentModule.Data.Services
             return result;
         }
 
-        // The types of every saved method the criteria finds, on any page: the type a saved row loads as
-        // (PaymentMethodsService.ToModel).
-        protected virtual async Task<ISet<Type>> GetSavedMethodTypesAsync(PaymentMethodsSearchCriteria criteria)
+        // The types of every saved method the criteria finds, on any page: one search of the saved methods only, cached
+        // like the pages, so the types are the ones the saved rows load as.
+        protected virtual async Task<ISet<Type>> GetSavedMethodTypesAsync(PaymentMethodsSearchCriteria criteria, int savedCount)
         {
-            using var repository = _repositoryFactory();
+            var savedCriteria = criteria.CloneTyped();
+            savedCriteria.Skip = 0;
+            savedCriteria.Take = savedCount;
+            savedCriteria.WithoutTransient = true;
 
-            var typeNames = await BuildQuery(repository, criteria)
-                .Select(x => string.IsNullOrEmpty(x.TypeName) ? x.Code : x.TypeName)
-                .Distinct()
-                .ToListAsync();
+            var savedMethods = await base.SearchAsync(savedCriteria, clone: false);
 
-            return typeNames
-                .Select(x => AbstractTypeFactory<PaymentMethod>.TryCreateInstance(x).GetType())
-                .ToHashSet();
+            return savedMethods.Results.Select(x => x.GetType()).ToHashSet();
         }
     }
 }

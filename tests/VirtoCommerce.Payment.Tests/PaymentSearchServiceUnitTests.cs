@@ -48,7 +48,7 @@ public class PaymentSearchServiceUnitTests
     }
 
 
-    private static Mock<IPaymentRepository> CreateRepositoryMock(List<StorePaymentMethodEntity> paymentsInDb)
+    internal static Mock<IPaymentRepository> CreateRepositoryMock(List<StorePaymentMethodEntity> paymentsInDb)
     {
         var paymentMethodsDbSet = paymentsInDb.BuildMockDbSet();
 
@@ -64,7 +64,7 @@ public class PaymentSearchServiceUnitTests
         return paymentRepository;
     }
 
-    private static (IPaymentMethodsRegistrar, PaymentMethodsSearchService) CreateService(Mock<IPaymentRepository> paymentRepositoryMock)
+    internal static (IPaymentMethodsRegistrar, PaymentMethodsSearchService) CreateService(Mock<IPaymentRepository> paymentRepositoryMock)
     {
         var factory = () => paymentRepositoryMock.Object;
 
