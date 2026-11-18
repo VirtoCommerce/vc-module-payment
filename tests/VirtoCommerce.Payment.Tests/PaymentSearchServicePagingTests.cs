@@ -130,6 +130,39 @@ public class PaymentSearchServicePagingTests
         Assert.All(totals, x => Assert.Equal(registered, x));
     }
 
+    // A count-only search counts the methods the store has not saved too, as the total of every page does.
+    [Fact]
+    public async Task SearchAsync_TakeZero_CountsTheUnsavedMethodsToo()
+    {
+        // Arrange
+        using var types = new RegisteredMethodTypes(_methodTypes.Take(12));
+        var searchService = CreateSearchService(CreateSavedRows(9, 9));
+
+        // Act
+        var result = await searchService.SearchAsync(new PaymentMethodsSearchCriteria { StoreId = StoreId, Take = 0 });
+
+        // Assert
+        Assert.Equal(12, result.TotalCount);
+        Assert.Empty(result.Results);
+    }
+
+    // WithoutTransient returns the saved methods only, and counts only them.
+    [Fact]
+    public async Task SearchAsync_WithoutTransient_ReturnsOnlyTheSavedMethods()
+    {
+        // Arrange
+        using var types = new RegisteredMethodTypes(_methodTypes.Take(12));
+        var rows = CreateSavedRows(9, 9);
+        var searchService = CreateSearchService(rows);
+
+        // Act
+        var result = await searchService.SearchAsync(new PaymentMethodsSearchCriteria { StoreId = StoreId, WithoutTransient = true });
+
+        // Assert
+        Assert.Equal(rows.Count, result.TotalCount);
+        Assert.Equal(rows.Select(x => x.Id), result.Results.Select(x => x.Id));
+    }
+
     private static List<StorePaymentMethodEntity> CreateSavedRows(int saved, int active)
     {
         return _methodTypes

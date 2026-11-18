@@ -105,26 +105,9 @@ namespace VirtoCommerce.PaymentModule.Data.Services
                 return result;
             }
 
-            // Plain LINQ-to-objects: composing operators on an in-memory IQueryable
-            // (EnumerableQuery) rebuilds and compiles an expression tree on every
-            // enumeration; this method runs on every cart/checkout read, and the per-call
-            // compilation convoys on runtime-wide locks under concurrent requests.
-            var transientMethods = AbstractTypeFactory<PaymentMethod>.AllTypeInfos
-                .Select(x => AbstractTypeFactory<PaymentMethod>.TryCreateInstance(x.Type.Name));
-
-            if (!string.IsNullOrEmpty(criteria.Keyword))
-            {
-                transientMethods = transientMethods.Where(x => x.Code.Contains(criteria.Keyword));
-            }
-
-            if (criteria.IsActive.HasValue)
-            {
-                transientMethods = transientMethods.Where(x => x.IsActive == criteria.IsActive.Value);
-            }
-
             // The list is the saved methods, then a new instance of every method that is not saved. A page that does not
             // hold every saved method cannot tell from its own rows which methods are saved, so it searches them all.
-            var filteredTransientMethods = transientMethods.ToList();
+            var filteredTransientMethods = await GetTransientMethodsAsync(criteria);
             var savedCount = result.TotalCount;
 
             if (filteredTransientMethods.Count > 0)
@@ -133,7 +116,9 @@ namespace VirtoCommerce.PaymentModule.Data.Services
                     ? result.Results.Select(x => x.GetType()).ToHashSet()
                     : await GetSavedMethodTypesAsync(criteria, savedCount);
 
-                filteredTransientMethods.RemoveAll(x => savedMethodTypes.Contains(x.GetType()));
+                filteredTransientMethods = filteredTransientMethods
+                    .Where(x => !savedMethodTypes.Contains(x.GetType()))
+                    .ToList();
             }
 
             // Counted on every page, also on a page full of saved methods, so that the total is the same on every page.
@@ -171,6 +156,31 @@ namespace VirtoCommerce.PaymentModule.Data.Services
                 : allMethods.AsQueryable().OrderBySortInfos(sortInfos).ToList();
 
             return result;
+        }
+
+        // A new instance of every registered payment method that the criteria's keyword and IsActive let through, saved or
+        // not: the search then drops the ones the store has saved. Override to change which registered methods can be
+        // listed as not saved.
+        protected virtual Task<IList<PaymentMethod>> GetTransientMethodsAsync(PaymentMethodsSearchCriteria criteria)
+        {
+            // Plain LINQ-to-objects: composing operators on an in-memory IQueryable
+            // (EnumerableQuery) rebuilds and compiles an expression tree on every
+            // enumeration; this method runs on every cart/checkout read, and the per-call
+            // compilation convoys on runtime-wide locks under concurrent requests.
+            var transientMethods = AbstractTypeFactory<PaymentMethod>.AllTypeInfos
+                .Select(x => AbstractTypeFactory<PaymentMethod>.TryCreateInstance(x.Type.Name));
+
+            if (!string.IsNullOrEmpty(criteria.Keyword))
+            {
+                transientMethods = transientMethods.Where(x => x.Code.Contains(criteria.Keyword));
+            }
+
+            if (criteria.IsActive.HasValue)
+            {
+                transientMethods = transientMethods.Where(x => x.IsActive == criteria.IsActive.Value);
+            }
+
+            return Task.FromResult<IList<PaymentMethod>>(transientMethods.ToList());
         }
 
         // The types of every saved method the criteria finds, on any page: one search of the saved methods only, cached
