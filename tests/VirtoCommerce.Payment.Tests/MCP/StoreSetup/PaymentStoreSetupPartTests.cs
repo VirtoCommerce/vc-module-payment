@@ -126,6 +126,22 @@ public class PaymentStoreSetupPartTests
         Assert.DoesNotContain(plan.Errors, x => x.Contains("sk_live_1"));
     }
 
+    // A setting the method never saved has its default: sending that value changes nothing.
+    [Fact]
+    public async Task PlanAsync_ASettingSentWithTheValueInEffect_ChangesNothing()
+    {
+        //Arrange
+        _saved.Add(CreateCard(isActive: true));
+        var section = CreateSection(new PaymentStoreSetupMethod { Code = CardCode, Settings = new Dictionary<string, object> { [_mode.Name] = "Test" } });
+
+        //Act
+        var plan = await CreatePart().PlanAsync(CreateContext(), section);
+
+        //Assert
+        Assert.Empty(plan.Errors);
+        Assert.Empty(plan.Changes);
+    }
+
     [Fact]
     public async Task ApplyAsync_SavesTheChangedMethodsForTheStore_AndARepeatChangesNothing()
     {

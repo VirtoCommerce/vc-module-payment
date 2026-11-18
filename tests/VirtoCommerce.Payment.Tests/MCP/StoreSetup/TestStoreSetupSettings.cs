@@ -8,8 +8,8 @@ using VirtoCommerce.StoreModule.Core.Model;
 
 namespace VirtoCommerce.Payment.Tests.MCP.StoreSetup;
 
-// Store's IStoreSetupSettings in short, for a part's tests: a SecureString or a name ending with Key is a secret, and a
-// secret is refused.
+// Store's IStoreSetupSettings in short, for a part's tests: a SecureString or a name ending with Key is a secret, a
+// secret is refused, and a null returns the setting to its default.
 public class TestStoreSetupSettings : IStoreSetupSettings
 {
     public bool IsSecret(SettingDescriptor descriptor)
@@ -33,7 +33,12 @@ public class TestStoreSetupSettings : IStoreSetupSettings
             return false;
         }
 
-        value = raw is JsonElement element ? element.ToString() : raw;
+        value = raw switch
+        {
+            null or JsonElement { ValueKind: JsonValueKind.Null } => descriptor.DefaultValue,
+            JsonElement element => element.ToString(),
+            _ => raw,
+        };
         return true;
     }
 

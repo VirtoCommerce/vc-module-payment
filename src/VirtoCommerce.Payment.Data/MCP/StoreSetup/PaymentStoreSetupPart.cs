@@ -7,7 +7,6 @@ using VirtoCommerce.PaymentModule.Core.Model;
 using VirtoCommerce.PaymentModule.Core.Model.Search;
 using VirtoCommerce.PaymentModule.Core.Services;
 using VirtoCommerce.Platform.Core.Common;
-using VirtoCommerce.Platform.Core.Extensions;
 using VirtoCommerce.Platform.Core.Settings;
 using VirtoCommerce.StoreModule.Core.MCP.StoreSetup;
 using VirtoCommerce.StoreModule.Core.Model;
@@ -52,10 +51,7 @@ public class PaymentStoreSetupPart(
             choice.Description = method.Description;
 
             // Secrets are not even listed, so the agent never proposes to send one.
-            choice.Settings = GetSettingDescriptors(method)
-                .Where(x => !setupSettings.IsSecret(x))
-                .Select(x => setupSettings.Describe(x, value: null))
-                .ToList();
+            choice.Settings = setupSettings.DescribeAll(GetSettingDescriptors(method));
 
             choices.Add(choice);
         }
@@ -101,7 +97,7 @@ public class PaymentStoreSetupPart(
 
         foreach (var method in activeMethods)
         {
-            var emptyRequired = GetSettingDescriptors(method).Where(x => x.IsRequired && IsEmpty(GetValue(method, x))).ToList();
+            var emptyRequired = GetSettingDescriptors(method).Where(x => x.IsRequired && IsEmpty(StoreSetupSettingsExtensions.GetValue(method, x))).ToList();
 
             if (emptyRequired.Count == 0)
             {
@@ -136,7 +132,6 @@ public class PaymentStoreSetupPart(
         var requested = ((PaymentStoreSetupSection)section).Methods ?? [];
 
         var plan = AbstractTypeFactory<PaymentStoreSetupPlan>.TryCreateInstance();
-        plan.Part = PartName;
         plan.Methods = await GetStoreMethodsAsync(context.Store.Id);
 
         foreach (var code in requested.GroupBy(x => x.Code, StringComparer.OrdinalIgnoreCase).Where(x => x.Count() > 1).Select(x => x.Key))
@@ -224,50 +219,14 @@ public class PaymentStoreSetupPart(
 
     protected virtual void PlanSettings(PaymentStoreSetupPlan plan, PaymentMethod method, IDictionary<string, object> settings)
     {
-        if (settings.IsNullOrEmpty())
+        // Store's rules for a settings map, the same in every part: an unknown name, a secret or a wrong value is
+        // refused, a null returns the default, and a value equal to the one in effect changes nothing.
+        var changed = setupSettings.PlanSettings(plan, method, GetSettingDescriptors(method), settings,
+            $"methods.{method.Code}.", $"Payment method '{method.Code}'", "get_store_setup_options");
+
+        if (changed.Count > 0)
         {
-            return;
-        }
-
-        var descriptors = GetSettingDescriptors(method);
-
-        // A method the store has never saved starts with an empty array.
-        method.Settings = method.Settings?.ToList() ?? [];
-
-        foreach (var (name, raw) in settings)
-        {
-            var descriptor = descriptors.FirstOrDefault(x => x.Name.EqualsIgnoreCase(name));
-
-            if (descriptor == null)
-            {
-                plan.Errors.Add($"Payment method '{method.Code}' has no setting '{name}'.");
-                continue;
-            }
-
-            // Store's one refusal for every part: a secret ("enter it in the back office"), a setting a setup cannot
-            // change, a value of the wrong type or outside the allowed values.
-            if (!setupSettings.TryConvert(descriptor, raw, out var value, out var error))
-            {
-                plan.Errors.Add(error);
-                continue;
-            }
-
-            var entry = method.Settings.FirstOrDefault(x => x.Name.EqualsIgnoreCase(name));
-
-            if (entry == null)
-            {
-                entry = new ObjectSettingEntry(descriptor);
-                method.Settings.Add(entry);
-            }
-
-            // A null saves the default itself: the platform's settings save skips a null for most settings.
-            var newValue = value ?? descriptor.DefaultValue;
-
-            if (!StoreSetupValues.AreEqual(entry.Value, newValue))
-            {
-                AddChange(plan, method, name, entry.Value, newValue);
-                entry.Value = newValue;
-            }
+            plan.ChangedCodes.Add(method.Code);
         }
     }
 
@@ -291,27 +250,18 @@ public class PaymentStoreSetupPart(
         var item = AbstractTypeFactory<PaymentStoreSetupMethod>.TryCreateInstance();
         item.Code = method.Code;
         item.Priority = method.Priority;
-        item.Settings = GetSettingDescriptors(method)
-            .Where(x => !setupSettings.IsSecret(x))
-            .ToDictionary(x => x.Name, x => GetValue(method, x), StringComparer.OrdinalIgnoreCase);
+        item.Settings = setupSettings.GetValues(method, GetSettingDescriptors(method));
 
         return item;
     }
 
     protected virtual StoreSetupFinding CreateFinding(Store store, string id, string title, string why, string evidence, string fix)
     {
-        var finding = AbstractTypeFactory<StoreSetupFinding>.TryCreateInstance();
-        finding.Id = id;
-        finding.Part = PartName;
-        finding.Severity = StoreSetupFindingSeverity.Blocking;
+        var finding = StoreSetupFinding.ForStore(store, PartName, id, StoreSetupFindingSeverity.Blocking, "Payment methods");
         finding.Title = title;
         finding.Why = why;
         finding.Evidence = evidence;
         finding.Fix = fix;
-        finding.Screen = $"Stores > {store.Name ?? store.Id} > Payment methods";
-        finding.ObjectType = nameof(Store);
-        finding.ObjectId = store.Id;
-        finding.ObjectName = store.Name;
 
         return finding;
     }
@@ -320,11 +270,6 @@ public class PaymentStoreSetupPart(
     {
         plan.AddChange($"methods.{method.Code}.{field}", from, to);
         plan.ChangedCodes.Add(method.Code);
-    }
-
-    private static object GetValue(PaymentMethod method, SettingDescriptor descriptor)
-    {
-        return method.Settings?.FirstOrDefault(x => x.Name.EqualsIgnoreCase(descriptor.Name))?.Value ?? descriptor.DefaultValue;
     }
 
     private static bool IsEmpty(object value)
