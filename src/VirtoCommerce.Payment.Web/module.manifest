@@ -3,10 +3,10 @@
   <id>VirtoCommerce.Payment</id>
   <version>3.1012.0</version>
   <version-tag />
-  <platformVersion>3.1095.0</platformVersion>
+  <platformVersion>3.1096.0</platformVersion>
   <dependencies>
     <dependency id="VirtoCommerce.Core" version="3.1012.0" />
-    <dependency id="VirtoCommerce.Store" version="3.1009.0" />
+    <dependency id="VirtoCommerce.Store" version="3.1014.0-alpha.819-vcst-6918-store-admin-toolset" />
   </dependencies>
   <title>Payment module</title>
   <description>Provides management and integration of various payment methods.</description>  
