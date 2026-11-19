@@ -226,6 +226,26 @@ public class PaymentSearchServicePagingTests
         Assert.Equal(11, result.TotalCount);
     }
 
+    [Fact]
+    public async Task SearchAsync_OverrideEditingTheSavedRowsLookup_LeavesTheCachedMethodsUnchanged()
+    {
+        // Arrange
+        using var types = new RegisteredMethodTypes(_methodTypes.Take(12));
+        var (_, searchService) = PaymentSearchServiceUnitTests.CreateService(
+            PaymentSearchServiceUnitTests.CreateRepositoryMock(CreateSavedRows(3, 3)),
+            (repositoryFactory, cache, crudService, crudOptions, settingsManager, eventPublisher) =>
+                new SavedRowsEditingSearchService(repositoryFactory, cache, crudService, crudOptions, settingsManager, eventPublisher));
+
+        // Act: a page past the saved rows looks them up, and the override edits what that lookup gets.
+        await searchService.SearchAsync(new PaymentMethodsSearchCriteria { StoreId = StoreId, Skip = 3, Take = 2 });
+        var result = await searchService.SearchAsync(new PaymentMethodsSearchCriteria { StoreId = StoreId });
+
+        // Assert
+        var savedMethods = result.Results.Where(x => x.Id != null).ToList();
+        Assert.Equal(3, savedMethods.Count);
+        Assert.All(savedMethods, x => Assert.NotEqual(SavedRowsEditingSearchService.Edited, x.Description));
+    }
+
     private static List<StorePaymentMethodEntity> CreateSavedRows(int saved, int active)
     {
         return _methodTypes
@@ -349,6 +369,34 @@ public class PaymentSearchServicePagingTests
             types.Add(typeof(M12));
 
             return types;
+        }
+    }
+
+    // Edits the models of every saved-rows-only search, as an override that changes what base returns may do.
+    private sealed class SavedRowsEditingSearchService(
+        Func<IPaymentRepository> repositoryFactory,
+        IPlatformMemoryCache platformMemoryCache,
+        IPaymentMethodsService crudService,
+        IOptions<CrudOptions> crudOptions,
+        ISettingsManager settingsManager,
+        IEventPublisher eventPublisher)
+        : PaymentMethodsSearchService(repositoryFactory, platformMemoryCache, crudService, crudOptions, settingsManager, eventPublisher)
+    {
+        public const string Edited = "edited by an override";
+
+        protected override async Task<PaymentMethodsSearchResult> ProcessSearchResultAsync(PaymentMethodsSearchResult result, PaymentMethodsSearchCriteria criteria)
+        {
+            result = await base.ProcessSearchResultAsync(result, criteria);
+
+            if (criteria.WithoutTransient)
+            {
+                foreach (var method in result.Results)
+                {
+                    method.Description = Edited;
+                }
+            }
+
+            return result;
         }
     }
 

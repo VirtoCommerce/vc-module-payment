@@ -188,7 +188,8 @@ namespace VirtoCommerce.PaymentModule.Data.Services
             savedCriteria.Take = result.TotalCount;
             savedCriteria.WithoutTransient = true;
 
-            var savedMethods = await base.SearchAsync(savedCriteria, clone: false);
+            // Copies: overrides of ProcessSearchResultAsync also run for this search and may change its models.
+            var savedMethods = await base.SearchAsync(savedCriteria, clone: true);
 
             return savedMethods.Results.Select(x => x.GetType()).ToHashSet();
         }
