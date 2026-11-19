@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using VirtoCommerce.MCP.Core.Models;
 using VirtoCommerce.PaymentModule.Core.MCP.StoreSetup;
 using VirtoCommerce.PaymentModule.Core.Model;
 using VirtoCommerce.PaymentModule.Core.Model.Search;
@@ -30,7 +31,7 @@ public class PaymentStoreSetupPart(
 
     public virtual string Title => "Payment methods";
 
-    public virtual StoreSetupPermissions Permissions => StoreSetupPermissions.ForStore();
+    public virtual McpSetupPermissions Permissions => StoreSetupPermissions.ForStore();
 
     public virtual Type SectionType => typeof(PaymentStoreSetupSection);
 
@@ -38,13 +39,13 @@ public class PaymentStoreSetupPart(
     public virtual bool IsRequiredForNewStore => false;
 
     // 1. What can be chosen: every payment method installed on the platform, with the settings it takes.
-    public virtual async Task<IList<StoreSetupChoice>> GetChoicesAsync()
+    public virtual async Task<IList<McpSetupChoice>> GetChoicesAsync()
     {
-        var choices = new List<StoreSetupChoice>();
+        var choices = new List<McpSetupChoice>();
 
         foreach (var method in await paymentMethodsRegistrar.GetRegisteredPaymentMethods())
         {
-            var choice = AbstractTypeFactory<StoreSetupChoice>.TryCreateInstance();
+            var choice = AbstractTypeFactory<McpSetupChoice>.TryCreateInstance();
             choice.Field = $"{PartName}.methods.code";
             choice.Value = method.Code;
             choice.Title = method.Name;
@@ -76,7 +77,7 @@ public class PaymentStoreSetupPart(
 
     // 3. What is missing. When the request plans a payment section, the check reads the methods as they will be after
     // the change (the plan), so the preview says what the store would miss afterwards. Otherwise it reads the saved ones.
-    public virtual async Task<IList<StoreSetupFinding>> CheckAsync(StoreSetupContext context)
+    public virtual async Task<IList<McpFinding>> CheckAsync(StoreSetupContext context)
     {
         var store = context.Store;
         var methods = context.Plans.TryGetValue(PartName, out var plan) && plan is PaymentStoreSetupPlan paymentPlan
@@ -84,7 +85,7 @@ public class PaymentStoreSetupPart(
             : await GetStoreMethodsAsync(store.Id);
 
         var activeMethods = methods.Where(x => x.IsActive).ToList();
-        var findings = new List<StoreSetupFinding>();
+        var findings = new List<McpFinding>();
 
         if (activeMethods.Count == 0)
         {
@@ -127,7 +128,7 @@ public class PaymentStoreSetupPart(
 
     // 4a. Plans the section without side effects: the search returns copies, and nothing is saved here. The Store tool
     // plans for the dry run, again for the requester at approval, and again right before applying.
-    public virtual async Task<StoreSetupPartPlan> PlanAsync(StoreSetupContext context, object section)
+    public virtual async Task<McpSetupPartPlan> PlanAsync(StoreSetupContext context, object section)
     {
         var requested = ((PaymentStoreSetupSection)section).Methods ?? [];
 
@@ -170,7 +171,7 @@ public class PaymentStoreSetupPart(
     // 4b. Saves the methods the plan changes. Because the plan was made from the saved rows a moment ago, a repeat after a
     // failure finds the applied methods unchanged and saves only the rest; the unique index (TypeName, StoreId) keeps
     // one row per method and store.
-    public virtual async Task ApplyAsync(StoreSetupContext context, StoreSetupPartPlan plan)
+    public virtual async Task ApplyAsync(StoreSetupContext context, McpSetupPartPlan plan)
     {
         var paymentPlan = (PaymentStoreSetupPlan)plan;
         var changed = paymentPlan.Methods.Where(x => paymentPlan.ChangedCodes.Contains(x.Code)).ToList();
@@ -255,9 +256,9 @@ public class PaymentStoreSetupPart(
         return item;
     }
 
-    protected virtual StoreSetupFinding CreateFinding(Store store, string id, string title, string why, string evidence, string fix)
+    protected virtual McpFinding CreateFinding(Store store, string id, string title, string why, string evidence, string fix)
     {
-        var finding = StoreSetupFinding.ForStore(store, PartName, id, StoreSetupFindingSeverity.Blocking, "Payment methods");
+        var finding = StoreSetupFindings.ForStore(store, PartName, id, McpFindingSeverities.Critical, "Payment methods");
         finding.Title = title;
         finding.Why = why;
         finding.Evidence = evidence;

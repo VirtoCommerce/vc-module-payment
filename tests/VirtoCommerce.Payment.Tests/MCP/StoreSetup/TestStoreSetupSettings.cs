@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
+using VirtoCommerce.MCP.Core.Models;
 using VirtoCommerce.Platform.Core.Settings;
 using VirtoCommerce.StoreModule.Core.MCP.StoreSetup;
 using VirtoCommerce.StoreModule.Core.Model;
@@ -17,9 +18,9 @@ public class TestStoreSetupSettings : IStoreSetupSettings
         return descriptor.ValueType == SettingValueType.SecureString || descriptor.Name.EndsWith("Key", StringComparison.OrdinalIgnoreCase);
     }
 
-    public StoreSetupSetting Describe(SettingDescriptor descriptor, object value)
+    public McpSetupSetting Describe(SettingDescriptor descriptor, object value)
     {
-        return new StoreSetupSetting { Name = descriptor.Name, DefaultValue = descriptor.DefaultValue, Value = value ?? descriptor.DefaultValue, IsRequired = descriptor.IsRequired };
+        return new McpSetupSetting { Name = descriptor.Name, DefaultValue = descriptor.DefaultValue, Value = value ?? descriptor.DefaultValue, IsRequired = descriptor.IsRequired };
     }
 
     public bool TryConvert(SettingDescriptor descriptor, object raw, out object value, out string error)
@@ -42,8 +43,8 @@ public class TestStoreSetupSettings : IStoreSetupSettings
         return true;
     }
 
-    public Task<IList<StoreSetupSetting>> GetStoreSettingsAsync(Store store)
+    public Task<IList<McpSetupSetting>> GetStoreSettingsAsync(Store store)
     {
-        return Task.FromResult<IList<StoreSetupSetting>>([]);
+        return Task.FromResult<IList<McpSetupSetting>>([]);
     }
 }

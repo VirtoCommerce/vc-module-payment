@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Moq;
+using VirtoCommerce.MCP.Core.Models;
 using VirtoCommerce.PaymentModule.Core.MCP.StoreSetup;
 using VirtoCommerce.PaymentModule.Core.Model;
 using VirtoCommerce.PaymentModule.Core.Model.Search;
@@ -51,7 +52,7 @@ public class PaymentStoreSetupPartTests
         //Assert
         var finding = Assert.Single(findings);
         Assert.Equal("payment-no-active-method", finding.Id);
-        Assert.Equal(StoreSetupFindingSeverity.Blocking, finding.Severity);
+        Assert.Equal(McpFindingSeverities.Critical, finding.Severity);
     }
 
     [Fact]
@@ -79,7 +80,7 @@ public class PaymentStoreSetupPartTests
         //Assert
         var finding = Assert.Single(findings);
         Assert.Equal("payment-method-needs-settings", finding.Id);
-        Assert.Equal(StoreSetupFindingSeverity.Blocking, finding.Severity);
+        Assert.Equal(McpFindingSeverities.Critical, finding.Severity);
         Assert.Contains(_merchantName.Name, finding.Evidence);
         Assert.Contains("1 secret setting is empty", finding.Evidence);
         Assert.DoesNotContain(_apiKey.Name, JsonSerializer.Serialize(finding));
