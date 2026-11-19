@@ -35,7 +35,7 @@ public class PaymentStoreSetupPart(
 
     public virtual Type SectionType => typeof(PaymentStoreSetupSection);
 
-    // A store can be created without payment; the readiness check then says it cannot go live (Q7).
+    // A store can be created without payment; the readiness check then says it cannot go live.
     public virtual bool IsRequiredForNewStore => false;
 
     // 1. What can be chosen: every payment method installed on the platform, with the settings it takes.
@@ -89,7 +89,7 @@ public class PaymentStoreSetupPart(
 
         if (activeMethods.Count == 0)
         {
-            findings.Add(CreateFinding(store, "payment-no-active-method",
+            findings.Add(CreateFinding(store, "payment-no-active-method", McpFindingSeverities.Critical,
                 "No payment method is active",
                 "Customers cannot pay for an order.",
                 $"0 of {methods.Count} installed payment methods are active.",
@@ -106,7 +106,7 @@ public class PaymentStoreSetupPart(
                 continue;
             }
 
-            var finding = CreateFinding(store, "payment-method-needs-settings",
+            var finding = CreateFinding(store, "payment-method-needs-settings", McpFindingSeverities.Critical,
                 $"{method.Name} needs its required settings",
                 "The method cannot take payments until its required settings have values.",
                 StoreSetupFindings.GetEmptySettingsEvidence(names, secretCount),
@@ -135,6 +135,18 @@ public class PaymentStoreSetupPart(
         if (requested == null)
         {
             return plan;
+        }
+
+        // An entry without a code names no method. A code is read without the spaces around it.
+        if (requested.Any(x => string.IsNullOrWhiteSpace(x?.Code)))
+        {
+            plan.Errors.Add("Each payment method needs its code. get_store_setup_options lists the codes.");
+            return plan;
+        }
+
+        foreach (var item in requested)
+        {
+            item.Code = item.Code.Trim();
         }
 
         foreach (var code in requested.GroupBy(x => x.Code, StringComparer.OrdinalIgnoreCase).Where(x => x.Count() > 1).Select(x => x.Key))
@@ -215,7 +227,7 @@ public class PaymentStoreSetupPart(
             method.Priority = planned.Priority;
         }
 
-        StoreSetupSettingsExtensions.CopySettings(planned, method, fields);
+        setupSettings.CopySettings(planned, method, fields);
     }
 
     protected virtual void PlanActive(PaymentStoreSetupPlan plan, PaymentMethod method, bool isActive)
@@ -279,9 +291,9 @@ public class PaymentStoreSetupPart(
         return item;
     }
 
-    protected virtual McpFinding CreateFinding(Store store, string id, string title, string why, string evidence, string fix)
+    protected virtual McpFinding CreateFinding(Store store, string id, string severity, string title, string why, string evidence, string fix)
     {
-        var finding = StoreSetupFindings.ForStore(store, PartName, id, McpFindingSeverities.Critical, "Payment methods");
+        var finding = StoreSetupFindings.ForStore(store, PartName, id, severity, "Payment methods");
         finding.Title = title;
         finding.Why = why;
         finding.Evidence = evidence;

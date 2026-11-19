@@ -233,6 +233,39 @@ public class PaymentStoreSetupPartTests
         return new PaymentStoreSetupSection { Methods = methods };
     }
 
+    // The state lists the active methods, each with its settings in effect, and never a secret's value.
+    [Fact]
+    public async Task GetStateAsync_ListsTheActiveMethods_WithTheirSettings_WithoutSecrets()
+    {
+        //Arrange
+        var card = CreateCard(isActive: true);
+        card.Priority = 2;
+        card.Settings = [new ObjectSettingEntry(_merchantName) { Value = "EU shop" }, new ObjectSettingEntry(_apiKey) { Value = "sk_live_4242" }];
+        _saved.Add(card);
+
+        //Act
+        var state = (PaymentStoreSetupSection)await CreatePart().GetStateAsync(CreateContext().Store);
+
+        //Assert
+        var method = Assert.Single(state.Methods);
+        Assert.Equal((CardCode, 2), (method.Code, method.Priority));
+        Assert.Equal(new Dictionary<string, object> { [_merchantName.Name] = "EU shop", [_mode.Name] = "Test" }, method.Settings);
+        Assert.DoesNotContain("sk_live_4242", JsonSerializer.Serialize(state));
+    }
+
+    [Fact]
+    public async Task PlanAsync_AnEntryWithoutACode_IsRefused_AndACodeIsReadWithoutSpaces()
+    {
+        //Act
+        var withoutCode = await CreatePart().PlanAsync(CreateContext(), new PaymentStoreSetupSection { Methods = [new PaymentStoreSetupMethod { Code = CardCode }, null] });
+        var spaced = await CreatePart().PlanAsync(CreateContext(), new PaymentStoreSetupSection { Methods = [new PaymentStoreSetupMethod { Code = $" {CardCode} " }] });
+
+        //Assert
+        Assert.Equal(["Each payment method needs its code. get_store_setup_options lists the codes."], withoutCode.Errors);
+        Assert.Empty(spaced.Errors);
+        Assert.Contains(spaced.Changes, x => x.Field == $"methods.{CardCode}.active");
+    }
+
     private static TestPaymentMethod CreateCard(bool isActive = false)
     {
         return new TestPaymentMethod(CardCode) { Name = "Test card", StoreId = isActive ? StoreId : null, IsActive = isActive };
@@ -246,9 +279,10 @@ public class PaymentStoreSetupPartTests
         var searchService = new Mock<IPaymentMethodsSearchService>();
         searchService
             .Setup(x => x.SearchAsync(It.IsAny<PaymentMethodsSearchCriteria>(), It.IsAny<bool>()))
-            .ReturnsAsync((PaymentMethodsSearchCriteria criteria, bool _) =>
+            .ReturnsAsync((PaymentMethodsSearchCriteria criteria, bool clone) =>
             {
-                var saved = _saved.Where(x => x.StoreId == criteria.StoreId).Select(x => x.CloneTyped()).ToList();
+                // As the search service: copies when asked, the saved instances themselves otherwise.
+                var saved = _saved.Where(x => x.StoreId == criteria.StoreId).Select(x => clone ? x.CloneTyped() : x).ToList();
                 var installed = new PaymentMethod[] { new DefaultManualPaymentMethod(), CreateCard() };
                 var all = saved.Concat(installed.Where(x => !saved.Any(s => s.Code == x.Code))).ToList();
 
