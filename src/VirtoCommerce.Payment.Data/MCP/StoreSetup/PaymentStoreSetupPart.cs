@@ -98,24 +98,20 @@ public class PaymentStoreSetupPart(
 
         foreach (var method in activeMethods)
         {
-            var emptyRequired = GetSettingDescriptors(method).Where(x => x.IsRequired && IsEmpty(StoreSetupSettingsExtensions.GetValue(method, x))).ToList();
+            // A secret is never named, not even when it is missing: a person enters it in the back office.
+            var (names, secretCount) = setupSettings.GetEmptyRequiredSettings(method, GetSettingDescriptors(method));
 
-            if (emptyRequired.Count == 0)
+            if (names.Count == 0 && secretCount == 0)
             {
                 continue;
             }
 
-            // A secret is never named, not even when it is missing: a person enters it in the back office.
-            var secretCount = emptyRequired.Count(setupSettings.IsSecret);
-            var names = emptyRequired.Where(x => !setupSettings.IsSecret(x)).Select(x => x.Name).ToList();
-
             var finding = CreateFinding(store, "payment-method-needs-settings",
                 $"{method.Name} needs its required settings",
                 "The method cannot take payments until its required settings have values.",
-                GetEmptySettingsText(names, secretCount),
-                secretCount > 0
-                    ? "Enter the empty settings in the back office: secrets are never sent through the agent."
-                    : "Fill the settings in the payment section, or in the back office.");
+                StoreSetupFindings.GetEmptySettingsEvidence(names, secretCount),
+                GetEmptySettingsFix(names, secretCount));
+            finding.ManualOnly = names.Count == 0;
             finding.ObjectType = nameof(PaymentMethod);
             finding.ObjectId = method.Code;
             finding.ObjectName = method.Name;
@@ -130,10 +126,16 @@ public class PaymentStoreSetupPart(
     // plans for the dry run, again for the requester at approval, and again right before applying.
     public virtual async Task<McpSetupPartPlan> PlanAsync(StoreSetupContext context, object section)
     {
-        var requested = ((PaymentStoreSetupSection)section).Methods ?? [];
+        var requested = ((PaymentStoreSetupSection)section).Methods;
 
         var plan = AbstractTypeFactory<PaymentStoreSetupPlan>.TryCreateInstance();
         plan.Methods = await GetStoreMethodsAsync(context.Store.Id);
+
+        // A list that is left out changes nothing; an empty list switches every method off.
+        if (requested == null)
+        {
+            return plan;
+        }
 
         foreach (var code in requested.GroupBy(x => x.Code, StringComparer.OrdinalIgnoreCase).Where(x => x.Count() > 1).Select(x => x.Key))
         {
@@ -168,26 +170,52 @@ public class PaymentStoreSetupPart(
         return plan;
     }
 
-    // 4b. Saves the methods the plan changes. Because the plan was made from the saved rows a moment ago, a repeat after a
-    // failure finds the applied methods unchanged and saves only the rest; the unique index (TypeName, StoreId) keeps
-    // one row per method and store.
+    // 4b. Saves what the plan changes onto the store's methods read again, so a change made since the plan stays: the
+    // fields of the plan's rows (active, priority and settings) take their planned values, the others keep theirs. A
+    // repeat after a failure finds the applied methods unchanged; the unique index (TypeName, StoreId) keeps one row per
+    // method and store.
     public virtual async Task ApplyAsync(StoreSetupContext context, McpSetupPartPlan plan)
     {
         var paymentPlan = (PaymentStoreSetupPlan)plan;
-        var changed = paymentPlan.Methods.Where(x => paymentPlan.ChangedCodes.Contains(x.Code)).ToList();
+        var methods = await GetStoreMethodsAsync(context.Store.Id);
+        var changed = new List<PaymentMethod>();
 
-        if (changed.Count == 0)
+        foreach (var planned in paymentPlan.Methods)
         {
-            return;
-        }
+            var fields = paymentPlan.GetChangedFields($"methods.{planned.Code}.");
 
-        // A method the store has never saved comes from the search without a store.
-        foreach (var method in changed)
-        {
+            if (fields.Count == 0)
+            {
+                continue;
+            }
+
+            var method = methods.First(x => x.Code.EqualsIgnoreCase(planned.Code));
+            ApplyChangedFields(planned, method, fields);
+            // A method the store has never saved comes from the search without a store.
             method.StoreId = context.Store.Id;
+            changed.Add(method);
         }
 
-        await paymentMethodsService.SaveChangesAsync(changed);
+        if (changed.Count > 0)
+        {
+            await paymentMethodsService.SaveChangesAsync(changed);
+        }
+    }
+
+    // The planned values of the fields the plan changes, on the method read again.
+    protected virtual void ApplyChangedFields(PaymentMethod planned, PaymentMethod method, ISet<string> fields)
+    {
+        if (fields.Contains("active"))
+        {
+            method.IsActive = planned.IsActive;
+        }
+
+        if (fields.Contains("priority"))
+        {
+            method.Priority = planned.Priority;
+        }
+
+        StoreSetupSettingsExtensions.CopySettings(planned, method, fields);
     }
 
     protected virtual void PlanActive(PaymentStoreSetupPlan plan, PaymentMethod method, bool isActive)
@@ -222,13 +250,8 @@ public class PaymentStoreSetupPart(
     {
         // Store's rules for a settings map, the same in every part: an unknown name, a secret or a wrong value is
         // refused, a null returns the default, and a value equal to the one in effect changes nothing.
-        var changed = setupSettings.PlanSettings(plan, method, GetSettingDescriptors(method), settings,
+        setupSettings.PlanSettings(plan, method, GetSettingDescriptors(method), settings,
             $"methods.{method.Code}.", $"Payment method '{method.Code}'", "get_store_setup_options");
-
-        if (changed.Count > 0)
-        {
-            plan.ChangedCodes.Add(method.Code);
-        }
     }
 
     // The store's saved methods, plus a new instance of every installed method the store has not saved yet.
@@ -270,28 +293,18 @@ public class PaymentStoreSetupPart(
     private static void AddChange(PaymentStoreSetupPlan plan, PaymentMethod method, string field, object from, object to)
     {
         plan.AddChange($"methods.{method.Code}.{field}", from, to);
-        plan.ChangedCodes.Add(method.Code);
     }
 
-    private static bool IsEmpty(object value)
+    // Settings that are not secrets can be sent in the section; a person enters secrets in the back office.
+    private static string GetEmptySettingsFix(IList<string> names, int secretCount)
     {
-        return value == null || value is string text && string.IsNullOrWhiteSpace(text);
-    }
-
-    private static string GetEmptySettingsText(IList<string> names, int secretCount)
-    {
-        var parts = new List<string>();
-
-        if (names.Count > 0)
+        if (secretCount == 0)
         {
-            parts.Add($"Empty: {string.Join(", ", names)}.");
+            return "Fill the settings in the payment section, or in the back office.";
         }
 
-        if (secretCount > 0)
-        {
-            parts.Add(secretCount == 1 ? "1 secret setting is empty." : $"{secretCount} secret settings are empty.");
-        }
-
-        return string.Join(" ", parts);
+        return names.Count == 0
+            ? "A person enters the secret settings in the back office: secrets are never sent through the agent."
+            : "Fill the other settings in the payment section; a person enters the secret settings in the back office.";
     }
 }

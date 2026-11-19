@@ -84,6 +84,26 @@ public class PaymentStoreSetupPartTests
         Assert.Contains(_merchantName.Name, finding.Evidence);
         Assert.Contains("1 secret setting is empty", finding.Evidence);
         Assert.DoesNotContain(_apiKey.Name, JsonSerializer.Serialize(finding));
+        Assert.False(finding.ManualOnly);
+    }
+
+    // Only a person can enter a secret, so a finding about empty secrets alone names no tool.
+    [Fact]
+    public async Task CheckAsync_ActiveMethodWithOnlyAnEmptySecret_IsManualOnly()
+    {
+        //Arrange
+        var card = CreateCard(isActive: true);
+        card.Settings = [new ObjectSettingEntry(_merchantName) { Value = "EU shop" }];
+        _saved.Add(card);
+
+        //Act
+        var findings = await CreatePart().CheckAsync(CreateContext());
+
+        //Assert
+        var finding = Assert.Single(findings);
+        Assert.True(finding.ManualOnly);
+        Assert.Equal("1 secret setting is empty.", finding.Evidence);
+        Assert.StartsWith("A person enters the secret settings in the back office", finding.Fix);
     }
 
     [Fact]
@@ -103,6 +123,23 @@ public class PaymentStoreSetupPartTests
             plan.Changes.Select(x => x.Field));
         Assert.Contains(plan.Warnings, x => x.StartsWith("Switches off"));
         _methodsService.Verify(x => x.SaveChangesAsync(It.IsAny<IList<PaymentMethod>>()), Times.Never);
+    }
+
+    // A field that is left out changes nothing, as the agent is told; an empty list is what switches every method off.
+    [Fact]
+    public async Task PlanAsync_ASectionWithoutMethods_ChangesNothing()
+    {
+        //Arrange
+        _saved.Add(new DefaultManualPaymentMethod { StoreId = StoreId, IsActive = true });
+
+        //Act
+        var withoutMethods = await CreatePart().PlanAsync(CreateContext(), new PaymentStoreSetupSection());
+        var emptyList = await CreatePart().PlanAsync(CreateContext(), CreateSection());
+
+        //Assert
+        Assert.Empty(withoutMethods.Errors);
+        Assert.Empty(withoutMethods.Changes);
+        Assert.Equal(["methods.DefaultManualPaymentMethod.active"], emptyList.Changes.Select(x => x.Field));
     }
 
     [Theory]
@@ -161,6 +198,29 @@ public class PaymentStoreSetupPartTests
         Assert.Equal((CardCode, StoreId, true), (saved.Code, saved.StoreId, saved.IsActive));
         Assert.Equal("EU shop", saved.Settings.Single(x => x.Name == _merchantName.Name).Value);
         Assert.Empty(repeat.Changes);
+    }
+
+    // Applying reads the methods again: a setting changed in the back office since the plan, which the plan does not
+    // name, keeps its new value.
+    [Fact]
+    public async Task ApplyAsync_KeepsWhatChangedSinceThePlan()
+    {
+        //Arrange
+        var card = CreateCard(isActive: true);
+        card.Settings = [new ObjectSettingEntry(_merchantName) { Value = "Old shop" }];
+        _saved.Add(card);
+        var part = CreatePart();
+        var context = CreateContext();
+        var plan = await part.PlanAsync(context, CreateSection(new PaymentStoreSetupMethod { Code = CardCode, Settings = new Dictionary<string, object> { [_merchantName.Name] = "EU shop" } }));
+        _saved.Single().Settings.Add(new ObjectSettingEntry(_mode) { Value = "Live" });
+
+        //Act
+        await part.ApplyAsync(context, plan);
+
+        //Assert
+        var saved = Assert.Single(_saved);
+        Assert.Equal("EU shop", saved.Settings.Single(x => x.Name == _merchantName.Name).Value);
+        Assert.Equal("Live", saved.Settings.Single(x => x.Name == _mode.Name).Value);
     }
 
     private static StoreSetupContext CreateContext()
