@@ -266,13 +266,15 @@ public class PaymentStoreSetupPart(
             $"methods.{method.Code}.", $"Payment method '{method.Code}'", "get_store_setup_options");
     }
 
-    // The store's saved methods, plus a new instance of every installed method the store has not saved yet.
+    // The store's saved methods, plus a new instance of every installed method the store has not saved yet,
+    // each a copy: the settings of a method the store has not saved are the settings manager's cached entries, which every
+    // unsaved method of the type shares in every store, and planning, applying and saving write to the entries they hold.
     protected virtual async Task<IList<PaymentMethod>> GetStoreMethodsAsync(string storeId)
     {
         var criteria = AbstractTypeFactory<PaymentMethodsSearchCriteria>.TryCreateInstance();
         criteria.StoreId = storeId;
 
-        return await paymentMethodsSearchService.SearchAllAsync(criteria);
+        return (await paymentMethodsSearchService.SearchAllAsync(criteria)).Select(x => x.CloneTyped()).ToList();
     }
 
     // The settings a method takes: each payment module registers them for its method's type name.

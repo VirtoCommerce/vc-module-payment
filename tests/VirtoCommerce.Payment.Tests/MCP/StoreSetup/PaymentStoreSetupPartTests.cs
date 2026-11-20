@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Moq;
@@ -30,6 +32,8 @@ public class PaymentStoreSetupPartTests
     // The methods the store has saved; the search adds a new instance of every installed method the store has not saved.
     private readonly List<PaymentMethod> _saved = [];
     private readonly Mock<IPaymentMethodsService> _methodsService = new();
+    // The settings manager's cached entries: every read of an unsaved test method gets a new list of these instances.
+    private readonly List<ObjectSettingEntry> _cachedSettings = [];
 
     [Fact]
     public async Task GetChoicesAsync_ListsTheInstalledMethods_WithTheirSettingsThatAreNotSecrets()
@@ -266,6 +270,40 @@ public class PaymentStoreSetupPartTests
         Assert.Contains(spaced.Changes, x => x.Field == $"methods.{CardCode}.active");
     }
 
+    // A priority left out keeps the method's own, which a method the store has never saved has as 0.
+    [Fact]
+    public void Priority_SaysWhatALeftOutPriorityIs()
+    {
+        //Act
+        var description = typeof(PaymentStoreSetupMethod).GetProperty(nameof(PaymentStoreSetupMethod.Priority))!.GetCustomAttribute<DescriptionAttribute>()!.Description;
+
+        //Assert
+        Assert.EndsWith("Left out: unchanged, which is 0 for a method the store has never saved. Equal numbers come in no fixed order.", description);
+    }
+
+    // A dry run, the plan made again at submit, and the apply never write to the settings manager's cached entries.
+    [Fact]
+    public async Task PlanAndApply_NeverWriteToTheSettingsManagersCachedEntries()
+    {
+        //Arrange
+        var cached = new ObjectSettingEntry(_mode) { Value = "Test" };
+        _cachedSettings.Add(cached);
+        var section = new PaymentStoreSetupSection { Methods = [new PaymentStoreSetupMethod { Code = CardCode, Settings = new Dictionary<string, object> { [_mode.Name] = "Live" } }] };
+
+        //Act
+        var dryRun = await CreatePart().PlanAsync(CreateContext(), section);
+        var atSubmit = await CreatePart().PlanAsync(CreateContext(), section);
+        await CreatePart().ApplyAsync(CreateContext(), atSubmit);
+
+        //Assert
+        Assert.Equal("Test", cached.Value);
+        Assert.Contains(dryRun.Changes, x => x.Field == $"methods.{CardCode}.{_mode.Name}");
+        Assert.Contains(atSubmit.Changes, x => x.Field == $"methods.{CardCode}.{_mode.Name}");
+        var savedMethods = (IList<PaymentMethod>)_methodsService.Invocations.Last(x => x.Method.Name == nameof(IPaymentMethodsService.SaveChangesAsync)).Arguments[0];
+        Assert.DoesNotContain(savedMethods.SelectMany(x => x.Settings), x => ReferenceEquals(x, cached));
+        Assert.Equal("Live", savedMethods.Single(x => x.Code == CardCode).Settings.Single(x => x.Name == _mode.Name).Value);
+    }
+
     private static TestPaymentMethod CreateCard(bool isActive = false)
     {
         return new TestPaymentMethod(CardCode) { Name = "Test card", StoreId = isActive ? StoreId : null, IsActive = isActive };
@@ -283,7 +321,9 @@ public class PaymentStoreSetupPartTests
             {
                 // As the search service: copies when asked, the saved instances themselves otherwise.
                 var saved = _saved.Where(x => x.StoreId == criteria.StoreId).Select(x => clone ? x.CloneTyped() : x).ToList();
-                var installed = new PaymentMethod[] { new DefaultManualPaymentMethod(), CreateCard() };
+                var card = CreateCard();
+                card.Settings = _cachedSettings.ToList();
+                var installed = new PaymentMethod[] { new DefaultManualPaymentMethod(), card };
                 var all = saved.Concat(installed.Where(x => !saved.Any(s => s.Code == x.Code))).ToList();
 
                 return new PaymentMethodsSearchResult { TotalCount = all.Count, Results = all.Skip(criteria.Skip).Take(criteria.Take).ToList() };
