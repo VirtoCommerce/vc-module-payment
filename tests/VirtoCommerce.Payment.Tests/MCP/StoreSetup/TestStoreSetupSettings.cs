@@ -1,8 +1,8 @@
-using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
 using VirtoCommerce.MCP.Core.Models;
+using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.Settings;
 using VirtoCommerce.StoreModule.Core.MCP.StoreSetup;
 using VirtoCommerce.StoreModule.Core.Model;
@@ -16,7 +16,7 @@ public class TestStoreSetupSettings : StoreSetupSettingsBase
 {
     public override bool IsSecret(SettingDescriptor descriptor)
     {
-        return descriptor.ValueType == SettingValueType.SecureString || descriptor.Name.EndsWith("Key", StringComparison.OrdinalIgnoreCase);
+        return descriptor.ValueType == SettingValueType.SecureString || descriptor.Name.EndsWithIgnoreCase("Key");
     }
 
     public override McpSetupSetting Describe(SettingDescriptor descriptor, object value)

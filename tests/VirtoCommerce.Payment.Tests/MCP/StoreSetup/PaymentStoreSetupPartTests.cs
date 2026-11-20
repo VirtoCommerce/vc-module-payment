@@ -261,8 +261,8 @@ public class PaymentStoreSetupPartTests
     public async Task PlanAsync_AnEntryWithoutACode_IsRefused_AndACodeIsReadWithoutSpaces()
     {
         //Act
-        var withoutCode = await CreatePart().PlanAsync(CreateContext(), new PaymentStoreSetupSection { Methods = [new PaymentStoreSetupMethod { Code = CardCode }, null] });
-        var spaced = await CreatePart().PlanAsync(CreateContext(), new PaymentStoreSetupSection { Methods = [new PaymentStoreSetupMethod { Code = $" {CardCode} " }] });
+        var withoutCode = await CreatePart().PlanAsync(CreateContext(), CreateSection(new PaymentStoreSetupMethod { Code = CardCode }, null));
+        var spaced = await CreatePart().PlanAsync(CreateContext(), CreateSection(new PaymentStoreSetupMethod { Code = $" {CardCode} " }));
 
         //Assert
         Assert.Equal(["Each payment method needs its code. get_store_setup_options lists the codes."], withoutCode.Errors);
@@ -281,6 +281,17 @@ public class PaymentStoreSetupPartTests
         Assert.EndsWith("Left out: unchanged, which is 0 for a method the store has never saved. Equal numbers come in no fixed order.", description);
     }
 
+    // The settings map says what a null does, as Store's settings section does.
+    [Fact]
+    public void Settings_SaysWhatANullDoes()
+    {
+        //Act
+        var description = typeof(PaymentStoreSetupMethod).GetProperty(nameof(PaymentStoreSetupMethod.Settings))!.GetCustomAttribute<DescriptionAttribute>()!.Description;
+
+        //Assert
+        Assert.Contains("null returns a setting to its default, and a setting without a default takes a value instead.", description);
+    }
+
     // A dry run, the plan made again at submit, and the apply never write to the settings manager's cached entries.
     [Fact]
     public async Task PlanAndApply_NeverWriteToTheSettingsManagersCachedEntries()
@@ -288,7 +299,7 @@ public class PaymentStoreSetupPartTests
         //Arrange
         var cached = new ObjectSettingEntry(_mode) { Value = "Test" };
         _cachedSettings.Add(cached);
-        var section = new PaymentStoreSetupSection { Methods = [new PaymentStoreSetupMethod { Code = CardCode, Settings = new Dictionary<string, object> { [_mode.Name] = "Live" } }] };
+        var section = CreateSection(new PaymentStoreSetupMethod { Code = CardCode, Settings = new Dictionary<string, object> { [_mode.Name] = "Live" } });
 
         //Act
         var dryRun = await CreatePart().PlanAsync(CreateContext(), section);

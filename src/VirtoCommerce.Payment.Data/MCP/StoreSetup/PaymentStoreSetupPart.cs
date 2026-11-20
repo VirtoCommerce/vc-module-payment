@@ -194,7 +194,7 @@ public class PaymentStoreSetupPart(
 
         foreach (var planned in paymentPlan.Methods)
         {
-            var fields = paymentPlan.GetChangedFields($"methods.{planned.Code}.");
+            var fields = paymentPlan.GetChangedFields(GetFieldPrefix(planned.Code));
 
             if (fields.Count == 0)
             {
@@ -263,7 +263,13 @@ public class PaymentStoreSetupPart(
         // Store's rules for a settings map, the same in every part: an unknown name, a secret or a wrong value is
         // refused, a null returns the default, and a value equal to the one in effect changes nothing.
         setupSettings.PlanSettings(plan, method, GetSettingDescriptors(method), settings,
-            $"methods.{method.Code}.", $"Payment method '{method.Code}'", "get_store_setup_options");
+            GetFieldPrefix(method.Code), $"Payment method '{method.Code}'", "get_store_setup_options");
+    }
+
+    // The prefix of the plan's rows for one method, such as "methods.<code>.": the rows are written and read with it.
+    protected static string GetFieldPrefix(string code)
+    {
+        return $"methods.{code}.";
     }
 
     // The store's saved methods, plus a new instance of every installed method the store has not saved yet,
@@ -274,7 +280,8 @@ public class PaymentStoreSetupPart(
         var criteria = AbstractTypeFactory<PaymentMethodsSearchCriteria>.TryCreateInstance();
         criteria.StoreId = storeId;
 
-        return (await paymentMethodsSearchService.SearchAllAsync(criteria)).Select(x => x.CloneTyped()).ToList();
+        // Read without the search's own copy: the copy is made here, once.
+        return (await paymentMethodsSearchService.SearchAllNoCloneAsync(criteria)).Select(x => x.CloneTyped()).ToList();
     }
 
     // The settings a method takes: each payment module registers them for its method's type name.
@@ -306,7 +313,7 @@ public class PaymentStoreSetupPart(
 
     private static void AddChange(PaymentStoreSetupPlan plan, PaymentMethod method, string field, object from, object to)
     {
-        plan.AddChange($"methods.{method.Code}.{field}", from, to);
+        plan.AddChange($"{GetFieldPrefix(method.Code)}{field}", from, to);
     }
 
     // Settings that are not secrets can be sent in the section; a person enters secrets in the back office.
