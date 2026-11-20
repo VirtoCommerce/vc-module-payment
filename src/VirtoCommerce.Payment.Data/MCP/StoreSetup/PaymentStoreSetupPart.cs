@@ -22,7 +22,8 @@ public class PaymentStoreSetupPart(
     IPaymentMethodsSearchService paymentMethodsSearchService,
     IPaymentMethodsService paymentMethodsService,
     ISettingsRegistrar settingsRegistrar,
-    IStoreSetupSettings setupSettings)
+    IStoreSetupSettings setupSettings,
+    IStoreSetupFindings setupFindings)
     : IStoreSetupChoices, IStoreSetupState, IStoreSetupCheck, IStoreSetupSection
 {
     public const string PartName = "payment";
@@ -109,7 +110,7 @@ public class PaymentStoreSetupPart(
             var finding = CreateFinding(store, "payment-method-needs-settings", McpFindingSeverities.Critical,
                 $"{method.Name} needs its required settings",
                 "The method cannot take payments until its required settings have values.",
-                StoreSetupFindings.GetEmptySettingsEvidence(names, secretCount),
+                setupFindings.GetEmptySettingsEvidence(names, secretCount),
                 GetEmptySettingsFix(names, secretCount));
             finding.ManualOnly = names.Count == 0;
             finding.ObjectType = nameof(PaymentMethod);
@@ -302,7 +303,7 @@ public class PaymentStoreSetupPart(
 
     protected virtual McpFinding CreateFinding(Store store, string id, string severity, string title, string why, string evidence, string fix)
     {
-        var finding = StoreSetupFindings.ForStore(store, PartName, id, severity, "Payment methods");
+        var finding = setupFindings.ForStore(store, PartName, id, severity, "Payment methods");
         finding.Title = title;
         finding.Why = why;
         finding.Evidence = evidence;
@@ -311,13 +312,14 @@ public class PaymentStoreSetupPart(
         return finding;
     }
 
-    private static void AddChange(PaymentStoreSetupPlan plan, PaymentMethod method, string field, object from, object to)
+    // A row of the plan for one method's field, with the method's prefix (GetFieldPrefix).
+    protected virtual void AddChange(PaymentStoreSetupPlan plan, PaymentMethod method, string field, object from, object to)
     {
         plan.AddChange($"{GetFieldPrefix(method.Code)}{field}", from, to);
     }
 
     // Settings that are not secrets can be sent in the section; a person enters secrets in the back office.
-    private static string GetEmptySettingsFix(IList<string> names, int secretCount)
+    protected virtual string GetEmptySettingsFix(IList<string> names, int secretCount)
     {
         if (secretCount == 0)
         {

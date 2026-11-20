@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
 using VirtoCommerce.MCP.Core.Models;
+using VirtoCommerce.MCP.Core.Services;
 using VirtoCommerce.Platform.Core.Common;
 using VirtoCommerce.Platform.Core.Settings;
 using VirtoCommerce.StoreModule.Core.MCP.StoreSetup;
@@ -12,7 +13,7 @@ namespace VirtoCommerce.Payment.Tests.MCP.StoreSetup;
 // Store's IStoreSetupSettings in short, for a part's tests: a SecureString or a name ending with Key is a secret, a
 // secret is refused, and a null returns the setting to its default. Store's rules for an object's settings come from
 // StoreSetupSettingsBase, so the part's tests run them.
-public class TestStoreSetupSettings : StoreSetupSettingsBase
+public class TestStoreSetupSettings() : StoreSetupSettingsBase(new McpSetupValues())
 {
     public override bool IsSecret(SettingDescriptor descriptor)
     {

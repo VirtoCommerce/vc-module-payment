@@ -270,6 +270,64 @@ public class PaymentStoreSetupPartTests
         Assert.Contains(spaced.Changes, x => x.Field == $"methods.{CardCode}.active");
     }
 
+    // With a payment section in the request, the check reads the methods as the plan leaves them.
+    [Fact]
+    public async Task CheckAsync_ReadsTheMethodsAsThePlanLeavesThem()
+    {
+        //Arrange
+        var part = CreatePart();
+        var context = CreateContext();
+        context.Plans[PaymentStoreSetupPart.PartName] = await part.PlanAsync(context, CreateSection(new PaymentStoreSetupMethod { Code = "DefaultManualPaymentMethod" }));
+
+        //Act
+        var findings = await part.CheckAsync(context);
+
+        //Assert
+        Assert.DoesNotContain(findings, x => x.Id == "payment-no-active-method");
+    }
+
+    [Fact]
+    public async Task ApplyAsync_SavesAPlannedPriority()
+    {
+        //Arrange
+        _saved.Add(CreateCard(isActive: true));
+        var part = CreatePart();
+        var context = CreateContext();
+        var plan = await part.PlanAsync(context, CreateSection(new PaymentStoreSetupMethod { Code = CardCode, Priority = 5 }));
+
+        //Act
+        await part.ApplyAsync(context, plan);
+
+        //Assert
+        Assert.Equal(5, Assert.Single(_saved).Priority);
+    }
+
+    [Fact]
+    public async Task PlanAsync_AMethodListedTwice_IsRefused()
+    {
+        //Act
+        var plan = await CreatePart().PlanAsync(CreateContext(), CreateSection(new PaymentStoreSetupMethod { Code = CardCode }, new PaymentStoreSetupMethod { Code = CardCode.ToLowerInvariant() }));
+
+        //Assert
+        Assert.Equal([$"Payment method '{CardCode}' is listed twice."], plan.Errors);
+    }
+
+    [Fact]
+    public async Task GetStateAsync_ListsTheActiveMethodsByPriority()
+    {
+        //Arrange
+        var card = CreateCard(isActive: true);
+        card.Priority = 2;
+        _saved.Add(card);
+        _saved.Add(new DefaultManualPaymentMethod { StoreId = StoreId, IsActive = true, Priority = 1 });
+
+        //Act
+        var state = (PaymentStoreSetupSection)await CreatePart().GetStateAsync(CreateContext().Store);
+
+        //Assert
+        Assert.Equal(["DefaultManualPaymentMethod", CardCode], state.Methods.Select(x => x.Code));
+    }
+
     // A priority left out keeps the method's own, which a method the store has never saved has as 0.
     [Fact]
     public void Priority_SaysWhatALeftOutPriorityIs()
@@ -278,7 +336,10 @@ public class PaymentStoreSetupPartTests
         var description = typeof(PaymentStoreSetupMethod).GetProperty(nameof(PaymentStoreSetupMethod.Priority))!.GetCustomAttribute<DescriptionAttribute>()!.Description;
 
         //Assert
-        Assert.EndsWith("Left out: unchanged, which is 0 for a method the store has never saved. Equal numbers come in no fixed order.", description);
+        Assert.EndsWith("Left out: unchanged, which is 0 for a method the store has never saved.", description);
+        // A stored sort value: the Virto Commerce storefront lists the methods by code, so no order at checkout is promised.
+        Assert.Contains("the Virto Commerce storefront lists them by code", description);
+        Assert.DoesNotContain("checkout", description);
     }
 
     // The settings map says what a null does, as Store's settings section does.
@@ -289,7 +350,8 @@ public class PaymentStoreSetupPartTests
         var description = typeof(PaymentStoreSetupMethod).GetProperty(nameof(PaymentStoreSetupMethod.Settings))!.GetCustomAttribute<DescriptionAttribute>()!.Description;
 
         //Assert
-        Assert.Contains("null returns a setting to its default, and a setting without a default takes a value instead.", description);
+        Assert.Contains("null returns a setting to its default, or clears a setting that has allowed values but no default, and a setting with neither " +
+            "takes a value instead.", description);
     }
 
     // A dry run, the plan made again at submit, and the apply never write to the settings manager's cached entries.
@@ -356,6 +418,6 @@ public class PaymentStoreSetupPartTests
         settingsRegistrar.Setup(x => x.GetSettingsForType(nameof(TestPaymentMethod))).Returns([_merchantName, _mode, _apiKey]);
         settingsRegistrar.Setup(x => x.GetSettingsForType(nameof(DefaultManualPaymentMethod))).Returns([]);
 
-        return new PaymentStoreSetupPart(registrar.Object, searchService.Object, _methodsService.Object, settingsRegistrar.Object, new TestStoreSetupSettings());
+        return new PaymentStoreSetupPart(registrar.Object, searchService.Object, _methodsService.Object, settingsRegistrar.Object, new TestStoreSetupSettings(), new StoreSetupFindings());
     }
 }
