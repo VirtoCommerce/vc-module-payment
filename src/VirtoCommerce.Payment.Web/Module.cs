@@ -13,6 +13,7 @@ using VirtoCommerce.PaymentModule.Core.Model;
 using VirtoCommerce.PaymentModule.Core.Services;
 using VirtoCommerce.PaymentModule.Data;
 using VirtoCommerce.PaymentModule.Data.ExportImport;
+using VirtoCommerce.PaymentModule.Data.MCP.StoreSetup;
 using VirtoCommerce.PaymentModule.Data.MySql;
 using VirtoCommerce.PaymentModule.Data.PostgreSql;
 using VirtoCommerce.PaymentModule.Data.Repositories;
@@ -28,6 +29,7 @@ using VirtoCommerce.Platform.Data.Extensions;
 using VirtoCommerce.Platform.Data.MySql.Extensions;
 using VirtoCommerce.Platform.Data.PostgreSql.Extensions;
 using VirtoCommerce.Platform.Data.SqlServer.Extensions;
+using VirtoCommerce.StoreModule.Core.Extensions;
 
 namespace VirtoCommerce.PaymentModule.Web
 {
@@ -64,6 +66,7 @@ namespace VirtoCommerce.PaymentModule.Web
             serviceCollection.AddTransient<IPaymentMethodsSearchService, PaymentMethodsSearchService>();
             serviceCollection.AddTransient<IPaymentMethodsService, PaymentMethodsService>();
             serviceCollection.AddTransient<IPaymentMethodsRegistrar, PaymentMethodsService>();
+            serviceCollection.AddStoreSetupPart<PaymentStoreSetupPart>();
             serviceCollection.AddTransient<PaymentExportImport>();
             serviceCollection.AddTransient<PaymentMethodsJsonConverter>();
         }
